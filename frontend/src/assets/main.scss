@@ -1,0 +1,190 @@
+@import '../../node_modules/scss-reset/reset';
+
+body {
+	font-family: 'Courier New';
+	height: 100vh;
+}
+
+.container {
+	max-width: 600px;
+	margin: 0 auto;
+	padding: 30px 15px 40px 15px;
+
+	@media (min-width: 1024px) {
+		padding-top: 100px;
+	}
+}
+
+.popup {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1000;
+	background: rgba($color: #000000, $alpha: 0.7);
+	cursor: pointer;
+
+	&__content {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 15px;
+		max-width: 400px;
+		width: 100%;
+		padding: 20px;
+		background: #fff;
+
+		&__playlist {
+			@extend .popup__content;
+			max-width: 630px;
+		}
+	}
+}
+
+input {
+	background: #FFFFFF;
+	border: 1px solid #DEE2E6;
+	border-radius: 6px;
+	padding: 9px 16px;
+	width: 100%;
+	height: 52px;
+
+	&:focus {
+		box-shadow: 0px 0px 0px 3px rgba(102, 16, 242, 0.15);
+		border-color: #7749F8;
+		transition: .3s;
+	}
+}
+
+button {
+	border: 1px solid #7749F8;
+	background: #FFFFFF;
+	border-radius: 6px;
+	font-weight: 600;
+	font-size: 16px;
+	line-height: 18px;
+	padding: 16px 24px;
+	color: #6610F2;
+
+	@media (max-width: 1023px) {
+		width: 100%;
+	}
+}
+
+button:disabled {
+	border-color: #7b7684;
+	background: #FFFFFF;
+	color: #7b7684;
+}
+
+.add-panel {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 20px;
+	margin-bottom: 20px;
+
+	input {
+		@media (min-width: 1024px) {
+			width: auto;
+		}
+	}
+}
+
+.header {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 20px;
+	margin-bottom: 20px;
+
+	input {
+		@media (min-width: 1024px) {
+			width: auto;
+		}
+	}
+}
+
+.list-videos {
+	margin-top: 20px;
+	width: 590px;
+
+	&__item {
+		display: flex;
+		justify-content: space-between;
+
+		span {
+			max-width: 380px;
+			word-wrap: break-word;
+			padding-right: 15px;
+		}
+
+		&:not(:last-child) {
+			margin-bottom: 10px;
+		}
+	}
+}
+
+.list-playlist-videos {
+	@extend .list-videos;
+    margin-top: 0;
+	padding-left: 15px;
+
+	&__item {
+        @extend .list-videos__item
+    }
+}
+
+.list-playlists {
+	@extend .list-videos;
+
+	&__item {
+		@extend .list-videos__item;
+		display: block;
+	}
+}
+
+.dropdown-line {
+	display: flex;
+	justify-content: space-between;
+
+	span {
+		align-self: center;
+	}
+
+	button {
+		padding: 6px 15px;
+	}
+}
+
+.input-editable {
+	border-color: transparent;
+}
+
+.footer {
+	margin-top: 50px;
+
+	p {
+		text-align: center;
+	}
+
+	a {
+		color: #6610F2;
+	}
+}
+
+.text-danger {
+	color: #dc3545;
+}
+
+.text-secondary {
+	color: #6c757d;
+}
+
+.mt-20 {
+	margin-top: 20px;
+}
