@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: db.changelog-1.0
+      author: eygonb
+      comment: Create initial DB structure
+      changes:
+        - sqlFile:
+            path: db.changelog-1.0.sql
+            relativeToChangelogFile: true
