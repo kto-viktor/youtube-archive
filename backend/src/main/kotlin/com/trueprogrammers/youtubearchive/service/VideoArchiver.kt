@@ -43,10 +43,10 @@ class VideoArchiver(
         }
         val archive = videoArchiveRepository.findByYoutubeUrl(metadata.url)
         archive.ifPresent {
-            if (archive.get().status === Status.ERROR) {
-                videoArchiveRepository.delete(archive.get())
+            if (it.status === Status.ERROR) {
+                videoArchiveRepository.delete(it)
             } else {
-                throw AlreadyExistsException("Это видео уже сохранено, попробуйте поискать ${archive.get().title} в списках видео")
+                throw AlreadyExistsException("Это видео уже сохранено, попробуйте поискать ${it.title} в списках видео")
             }
         }
         return saveArchive(metadata).id!!
