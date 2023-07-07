@@ -1,0 +1,47 @@
+version: '3'
+services:
+  frontend:
+    image: ugpt/yt_archiver:frontend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8000:8000"
+    environment:
+      SERVER_NAME: localhost
+      BACKEND_URL: http://backend
+      BACKEND_PORT: 8080
+      S3_URL: https://youtube-archive.storage.yandexcloud.net/
+      CRT_NAME: fullchain-demo.crt
+      KEY_NAME: pk-demo.key
+    command: sh -c "envsubst '$${CRT_NAME} $${KEY_NAME} $${SERVER_NAME} $${BACKEND_URL} $${BACKEND_PORT} $${S3_URL}' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    depends_on:
+      - backend
+  backend:
+    image: ugpt/yt_archiver:backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
+      SPRING_DATASOURCE_URL: jdbc:postgresql://archive_db:5432/archive_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL-AUTO: validate
+      APP_S3_ACCESS_KEY: ""
+      APP_S3_SECRET_KEY: ""
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: INFO
+      LOGGING_FILE_NAME: /var/log/back/backend.log
+      LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN: /var/log/back/backend.%d{yyyy-MM-dd}.%i.log
+    depends_on:
+      - archive_db
+    volumes:
+      - ./logs/backend:/var/log/yt_archiver_backend
+  archive_db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "archive_db"
+    volumes:
+      - ./data:/var/lib/postgresql/data
