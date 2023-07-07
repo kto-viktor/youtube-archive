@@ -8,35 +8,35 @@ services:
       - "8000:8000"
     environment:
       SERVER_NAME: localhost
-      BACKEND_URL: http://host.docker.internal
+      BACKEND_URL: http://backend
       BACKEND_PORT: 8080
       S3_URL: https://youtube-archive.storage.yandexcloud.net/
       CRT_NAME: fullchain-demo.crt
       KEY_NAME: pk-demo.key
     command: sh -c "envsubst '$${CRT_NAME} $${KEY_NAME} $${SERVER_NAME} $${BACKEND_URL} $${BACKEND_PORT} $${S3_URL}' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
     depends_on:
-    - backend
+      - backend
   backend:
-    image: yt_archiver_back_demo
+    image: ugpt/yt_archiver:backend
     ports:
       - "8080:8080"
     environment:
       SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
-      SPRING_DATASOURCE_URL: jdbc:postgresql://archive:5432/archive
+      SPRING_DATASOURCE_URL: jdbc:postgresql://archive_db:5432/archive_db
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL-AUTO: validate
       APP_S3_ACCESS_KEY: ""
       APP_S3_SECRET_KEY: ""
     depends_on:
-      - archive
-  archive:
+      - archive_db
+  archive_db:
     image: postgres
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "archive"
-#    volumes:
-#      - ./data:/var/lib/postgresql/data
+      POSTGRES_DB: "archive_db"
+    volumes:
+      - ./data:/var/lib/postgresql/data
