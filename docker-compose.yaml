@@ -28,8 +28,13 @@ services:
       SPRING_JPA_HIBERNATE_DDL-AUTO: validate
       APP_S3_ACCESS_KEY: ""
       APP_S3_SECRET_KEY: ""
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: INFO
+      LOGGING_FILE_NAME: /var/log/back/backend.log
+      LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN: /var/log/back/backend.%d{yyyy-MM-dd}.%i.log
     depends_on:
       - archive_db
+    volumes:
+      - ./logs/backend:/var/log/yt_archiver_backend
   archive_db:
     image: postgres
     ports:
