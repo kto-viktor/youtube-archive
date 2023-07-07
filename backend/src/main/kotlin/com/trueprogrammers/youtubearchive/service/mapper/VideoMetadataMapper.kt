@@ -1,12 +1,12 @@
-package com.trueprogrammers.youtubearchive.service
+package com.trueprogrammers.youtubearchive.service.mapper
 
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
+import com.trueprogrammers.youtubearchive.service.VideoArchiver
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.math.floor
 
 @Service
-
 class VideoMetadataMapper {
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
     fun metadataFromString(string: String): VideoMetadata {
