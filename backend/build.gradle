@@ -47,7 +47,7 @@ task buildDocker {
 	dependsOn bootJar
 	doLast {
 		exec {
-			commandLine "docker", "build", "-t", "yt_archiver_back", "."
+			commandLine "docker", "build", "-t", "ugpt/yt_archiver:backend", "."
 		}
 	}
 }
