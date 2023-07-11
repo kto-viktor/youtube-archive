@@ -1,8 +1,8 @@
 <template>
   <div class="container">
-        <header class="header">
+    <header class="header">
       <a href="/playlist">Плейлисты</a>
-        </header>
+    </header>
     <div class="add-panel">
       <input
         id="link"
@@ -49,7 +49,7 @@
           <span>{{ video.title }}</span>
           <a
             v-if="video.status === 'DOWNLOADED'"
-            :href="baseDownloadUrl + '/' + video.downloadUrl.split('/').slice(-1)[0]"
+            :href="baseDownloadUrl + '/' + video.downloadUrl.split('//')[1].split('/').slice(1).join('/')"
             :download="`${video.title}.mp4`"
             target="_blank"
           >
