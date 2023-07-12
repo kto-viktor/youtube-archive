@@ -1,13 +1,24 @@
-import {createRouter, createWebHistory} from "vue-router";
-import VideoPage from "./components/VideoPage.vue"
-import PlaylistPage from "./components/PlaylistPage.vue"
-import NotFoundPage from "./components/NotFoundPage.vue"
+import { createRouter, createWebHistory } from "vue-router";
+import VideoPage from '@/pages/VideoPage.vue';
 
 export default createRouter({
-    history: createWebHistory(),
-    routes: [
-        { path: '/video', component: VideoPage, alias: '/'},
-        { path: '/playlist', component: PlaylistPage},
-        { path: '/:pathMatch(.*)', component: NotFoundPage }
-    ]
+	history: createWebHistory(),
+	routes: [
+			{ 
+				path: '/',
+				redirect: { path: "/video" },
+			},
+			{ 
+				path: '/video',
+				component: VideoPage,
+			},
+			{ 
+				path: '/playlist', 
+				component: () => import("@/pages/PlaylistPage.vue")
+			},
+			{ 
+				path: '/:pathMatch(.*)', 
+				component: () => import("@/pages/NotFoundPage.vue") 
+			}
+	]
 })
