@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 const isDev = import.meta.env.MODE === 'develop' ? 'develop' : 'production';
+const baseURL = isDev ? 'http://localhost:3001/api/' : '/api';
 
 const api = axios.create({
-  baseURL: isDev ? 'http://localhost:3001/api/' : '/api',
+  baseURL,
 	headers: {
 		'Content-Type': 'application/json'
 	},
@@ -39,11 +40,9 @@ export default class {
 	}
 
 	async saveVideo(data) {
-		console.log(data);
-
 		try {
 			const res = await api.post(isDev ? '/video/archives/' : '/video', {
-				data: data
+				data
 			});
 
 			return res;

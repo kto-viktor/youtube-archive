@@ -67,7 +67,7 @@
             target="_blank"
           >
             {{ $options.statuses[video.status] }}
-            {{ video.sizeMb > 0 ? ` (${video.sizeMb} мб)` : '(размер не известен)' }}
+            {{ sizeInfo(video) }}
           </a>
           <p
             v-else-if="video.status === 'ERROR'"
@@ -109,7 +109,7 @@
           class="list-playlist-videos__item"
         >
           <span>{{ video.title }}</span>
-          <p>Размер видео: {{ video.sizeMb > 0 ? `${video.sizeMb} мб` : 'размер не известен' }}</p>
+          <p>Размер видео: {{ sizeInfo(video) }}</p>
         </li>
       </ul>
       <button
@@ -142,13 +142,6 @@ export default {
 
   data() {
     return {
-      link: '',
-      showPopup: false,
-      popupError: false,
-      pageError: false,
-      errorMessage: '',
-      search: '',
-      id: null,
       playlists: null,
       playlistInfo: {
         url: '',
@@ -189,31 +182,6 @@ export default {
       return this.playlists.findIndex(playlist => playlist.id === id)
     },
 
-    saveModalHandler() {
-      if (this.link) {
-        this.getPlaylistMetadata()
-        this.showPopup = true;
-      }
-    },
-
-    clickCloseModal(e) {
-      if (e.target.classList[0] === this.$refs.modal.classList[0]) {
-        this.closeModal();
-        this.clearMetadata()
-      }
-    },
-
-    closeModal() {
-      this.showPopup = false;
-      this.link = '';
-    },
-
-    clearMetadata() {
-      this.playlistInfo.url = '';
-      this.playlistInfo.title = '';
-      this.playlistInfo.sizeMb = '';
-    },
-
     convertDownloadUrlToProxy(url) {
       return this.baseDownloadUrl + '/' + url.split('/').slice(-1)[0];
     },
@@ -232,7 +200,7 @@ export default {
     },
 
     async getAllPlaylists() {
-      const res = await axios.get(`${this.baseApiUrl}/playlist/archives?query=`);
+      const res = await axios.get(`http://127.0.0.1:3001/api/playlist/archives?query=`);
       this.playlists = res.data;
     },
 

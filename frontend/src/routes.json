@@ -1,4 +1,5 @@
 {
   "/api/video/*": "/$1",
-	"/api/video/archives": "/archives"
+	"/api/video/archives": "/archives",
+	"/api/playlist/archives": "/playlist"
 }

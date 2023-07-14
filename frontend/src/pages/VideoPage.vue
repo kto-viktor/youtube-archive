@@ -2,7 +2,7 @@
   <div class="add-panel">
     <input
       id="link"
-      v-model="link"
+      v-model.trim="link"
       v-focus
       type="text"
       name="link"
@@ -11,7 +11,7 @@
 
     <button
       type="button"
-      @click="saveModalHandler"
+      @click="openModal"
     >
       Сохранить в яндекс облако
     </button>
@@ -30,46 +30,15 @@
 
   <input
     id="search"
-    v-model="search"
+    v-model.trim="search"
     type="text"
     placeholder="Искать в архиве"
   >
 
-  <table 
+  <VideosList
     v-if="videos.length > 0"
-    class="list-videos"
-  >
-    <tr
-      v-for="video in videos"
-      :key="video.id"
-      class="list-videos__item"
-    >
-      <td>{{ video.title }}</td>
-      <td>
-        <a
-          v-if="video.status === 'DOWNLOADED'"
-          :href="baseDownloadUrl + '/' + video.downloadUrl.split('/').slice(-1)[0]"
-          :download="`${video.title}.mp4`"
-          target="_blank"
-        >
-          {{ $options.statuses[video.status] }}
-          {{ sizeInfo(video) }}
-        </a>
-        <p
-          v-else-if="video.status === 'ERROR'"
-          class="text-danger"
-        >
-          {{ $options.statuses[video.status] }}
-        </p>
-        <p
-          v-else
-          class="text-secondary"
-        >
-          {{ $options.statuses[video.status] }}
-        </p>
-      </td>
-    </tr>
-  </table>
+    :videos="videos"
+  />
 
   <div
     v-else-if="isLoading"
@@ -101,8 +70,20 @@
     <form
       class="popup__content"
       @submit.prevent="saveVideo"
-    >
+    >	
+      <div
+        v-if="isLoading"
+        class="text-center spinner-wrapper"
+      >
+        <SpinnerLoader
+          width="30px"
+          height="30px"
+          border-width="4px"
+        />
+      </div>
+
       <input
+        v-else
         v-model="videoInfo.title"
         v-focus
         readonly
@@ -133,27 +114,20 @@
 import debounce from 'lodash.debounce';
 import SpinnerLoader from '@/components/SpinnerLoader.vue';
 import videosMixin from '@/mixins/videosMixin.js';
+import VideosList from '@/components/VideosList.vue'
 
 export default {
 
 	components: {
-		SpinnerLoader
+		SpinnerLoader,
+		VideosList,
 	},
 
 	mixins: [ videosMixin ],
 
   data() {
     return {
-      link: '',
-      showPopup: false,
-      popupError: false,
-      pageError: false,
-      errorMessage: '',
-			isLoading: true,
-      search: '',
-      id: null,
       videos: [],
-			isError: false,
 			isVideoMode: true,
       videoInfo: {
         url: '',
@@ -162,8 +136,6 @@ export default {
       },
     }
   },
-
-	computed: {},
 
   watch: {
     search: debounce(function () {
@@ -176,33 +148,6 @@ export default {
   },
 
   methods: {
-    saveModalHandler() {
-      if (this.link) {
-        this.getVideoMetadata()
-        this.pageError = false;
-        this.showPopup = true;
-      }
-    },
-
-    clickCloseModal(e) {
-      if (e.target.classList[0] === this.$refs.modal.classList[0]) {
-        this.closeModal();
-        this.clearMetadata();
-      }
-    },
-
-    closeModal() {
-      this.showPopup = false;
-      this.popupError = false;
-      this.link = '';
-    },
-
-    clearMetadata() {
-      this.videoInfo.url = '';
-      this.videoInfo.title = '';
-      this.videoInfo.sizeMb = '';
-    },
-
     async getAllVideos() {
 			try {
 				const data = await this.$ServiceApi.getAllVideos();
@@ -227,6 +172,7 @@ export default {
 
     async getVideoMetadata() {
       try {
+				this.isLoading = true;
         const res = await this.$ServiceApi.getMetadata(this.link);
 
         if (res.status === 200 || res.status === 201) {
@@ -241,7 +187,9 @@ export default {
           this.errorMessage = error.response.data;
           this.link = '';
         }
-      }
+      } finally {
+				this.isLoading = false;
+			}
     },
 
     async searchArchive() {
@@ -264,12 +212,11 @@ export default {
         url: this.videoInfo.url,
         title: this.videoInfo.title,
         sizeMb: this.videoInfo.sizeMb
-      })
+      });
 
       this.clearMetadata()
 
       try {
-				console.log(data);
 				const res = await this.$ServiceApi.saveVideo(data);
 
         if (res.status === 200 || res.status === 201) {

@@ -1,5 +1,3 @@
-import { computed } from "vue"
-
 const focus = {
   mounted: (el) => el.focus()
 }
@@ -9,21 +7,60 @@ export default {
     focus
   },
 
-	statuses: {
-    'IN_PROGRESS': 'Загружается...',
-    'DOWNLOADED': 'Скачать...',
-    'ERROR': 'Ошибка загрузки :(',
+	data() {
+    return {
+      link: '',
+      showPopup: false,
+      popupError: false,
+      pageError: false,
+      errorMessage: '',
+			isLoading: true,
+			isError: false,
+      search: '',
+      id: null,
+    }
   },
 
 	methods: {
-		sizeInfo(video) {
-			return video.sizeMb > 0 ? ` (${video.sizeMb} мб)` : '(размер не известен)'
-		}
+		openModal() {
+      if (this.link) {
+        this.getVideoMetadata()
+        this.pageError = false;
+        this.showPopup = true;
+      }
+    },
+
+    clickCloseModal(e) {
+      if (e.target.classList[0] === this.$refs.modal.classList[0]) {
+        this.closeModal();
+        this.clearMetadata();
+      }
+    },
+
+    closeModal() {
+      this.showPopup = false;
+      this.popupError = false;
+      this.link = '';
+    },
+
+    clearMetadata() {
+      this.videoInfo.url = '';
+      this.videoInfo.title = '';
+      this.videoInfo.sizeMb = '';
+    },
+		
+		sizeInfo(size) {
+			return size > 0 ? ` (${size} мб)` : '(размер не известен)'
+		},
 	},
 
 	computed: {
-		videoHref() {
-			return baseDownloadUrl + '/' + video.downloadUrl.split('//')[1].split('/').slice(1).join('/')
-		}
+		baseApiUrl() {
+      return this.$isDev ? '/' : '/api'
+    },
+
+    baseDownloadUrl() {
+      return this.$isDev ? '' : '/download'
+    }
 	}
 }
