@@ -1,3 +1,5 @@
+import debounce from 'lodash.debounce';
+
 const focus = {
   mounted: (el) => el.focus()
 }
@@ -22,9 +24,9 @@ export default {
   },
 
 	methods: {
-		openModal() {
+		openModal(fn) {
       if (this.link) {
-        this.getVideoMetadata()
+        this.getMetadata(fn);
         this.pageError = false;
         this.showPopup = true;
       }
@@ -52,7 +54,35 @@ export default {
 		sizeInfo(size) {
 			return size > 0 ? ` (${size} мб)` : '(размер не известен)'
 		},
+
+		async getMetadata(fn) {
+      try {
+				this.isLoading = true;
+        const res = await fn;
+
+        if (res.status === 200 || res.status === 201) {
+          this.videoInfo.url = res.data.url;
+          this.videoInfo.title = res.data.title;
+          this.videoInfo.sizeMb = res.data.sizeMb;
+        }
+      } catch (error) {
+        console.error(error);
+        if (error.response.status === 400) {
+          this.popupError = true;
+          this.errorMessage = error.response.data;
+          this.link = '';
+        }
+      } finally {
+				this.isLoading = false;
+			}
+    },
 	},
+
+	watch: {
+    search: debounce(function () {
+      this.searchArchive();
+    }, 1200),
+  },
 
 	computed: {
 		baseApiUrl() {
