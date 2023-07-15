@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import VideoPage from '@/pages/VideoPage.vue';
+import PlaylistPage from '@/pages/PlaylistPage.vue';
 
 export default createRouter({
 	history: createWebHistory(),
@@ -14,7 +15,7 @@ export default createRouter({
 			},
 			{ 
 				path: '/playlist', 
-				component: () => import("@/pages/PlaylistPage.vue")
+				component: PlaylistPage
 			},
 			{ 
 				path: '/:pathMatch(.*)', 

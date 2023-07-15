@@ -256,8 +256,44 @@
     "title": "Криминальная Россия - OST 1995-1998. Реставрация HQ",
     "sizeMb": 49.86
   },
-
   "playlist": [
+    {
+      "url": "https://youtube.com/playlist?list=PLD5U-C5KK50UFbtFxPKlayhdZlOEpWuea",
+      "title": "Vue - для начинающих",
+      "videoArchives": [
+        {
+          "title": "#1 - Vue.js для начинающих - подключение и первые шаги | vue уроки | vue.js 2.x | 2.5.x",
+          "youtubeUrl": "https://www.youtube.com/watch?v=9dJQ8yXqizI",
+          "downloadUrl": "https://youtube-archive.storage.yandexcloud.net/%231%20-%20Vue.js%20%D0%B4%D0%BB%D1%8F%20%D0%BD%D0%B0%D1%87%D0%B8%D0%BD%D0%B0%D1%8E%D1%89%D0%B8%D1%85%20-%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B8%20%D0%BF%D0%B5%D1%80%D0%B2%D1%8B%D0%B5%20%D1%88%D0%B0%D0%B3%D0%B8%20%7C%20vue%20%D1%83%D1%80%D0%BE%D0%BA%D0%B8%20%7C%20vue.js%202.x%20%7C%202.5.x.mp4",
+          "sizeMb": 23.44,
+          "status": "DOWNLOADED",
+          "progress": 100,
+          "createdDate": "2023-07-14T21:13:24.171718",
+          "id": "13ff5fad-9f98-4183-9e3f-689593b67f1f"
+        },
+        {
+          "title": "#2 - Vue.js v-model и methods | vue уроки | vue.js 2.x | 2.5.x",
+          "youtubeUrl": "https://www.youtube.com/watch?v=mYcOBwn7Ji4",
+          "downloadUrl": "https://youtube-archive.storage.yandexcloud.net/%232%20-%20Vue.js%20v-model%20%D0%B8%20methods%20%7C%20vue%20%D1%83%D1%80%D0%BE%D0%BA%D0%B8%20%7C%20vue.js%202.x%20%7C%202.5.x.mp4",
+          "sizeMb": 13.27,
+          "status": "DOWNLOADED",
+          "progress": 100,
+          "createdDate": "2023-07-14T21:13:24.204591",
+          "id": "fe3c1e86-f6ca-4fb8-ab37-002c104e7046"
+        },
+        {
+          "title": "#3 - Vue.js watch | v-for | ajax | vue уроки | vue.js 2.x | 2.5.x",
+          "youtubeUrl": "https://www.youtube.com/watch?v=7t_SU3oFljA",
+          "downloadUrl": "https://youtube-archive.storage.yandexcloud.net/%233%20-%20Vue.js%20watch%20%7C%20v-for%20%7C%20ajax%20%7C%20vue%20%D1%83%D1%80%D0%BE%D0%BA%D0%B8%20%7C%20vue.js%202.x%20%7C%202.5.x.mp4",
+          "sizeMb": 35.8,
+          "status": "DOWNLOADED",
+          "progress": 100,
+          "createdDate": "2023-07-14T21:13:24.211387",
+          "id": "0c9b602c-52fd-458b-a3ff-e92e2562bb82"
+        }
+      ],
+      "id": "a4bbd0e2-2168-4977-95d5-316e6f08fd59"
+    },
     {
       "url": "https://www.youtube.com/playlist?list=PLFsLD4M4aQvo9-78hAUoVfLKdaSVpP9m1",
       "title": "Tessa Violet Offical Music Videos",
