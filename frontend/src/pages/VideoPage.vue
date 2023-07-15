@@ -11,7 +11,8 @@
 
     <button
       type="button"
-      @click="openModal"
+      class="button"
+      @click="openModal($ServiceApi.getVideoMetadata(link))"
     >
       Сохранить в яндекс облако
     </button>
@@ -93,6 +94,7 @@
       <button
         :disabled="popupError"
         type="submit"
+        class="button"
       >
         сохранить
       </button>
@@ -111,13 +113,11 @@
 </template>
 
 <script>
-import debounce from 'lodash.debounce';
 import SpinnerLoader from '@/components/SpinnerLoader.vue';
 import videosMixin from '@/mixins/videosMixin.js';
 import VideosList from '@/components/VideosList.vue'
 
 export default {
-
 	components: {
 		SpinnerLoader,
 		VideosList,
@@ -135,12 +135,6 @@ export default {
         sizeMb: ''
       },
     }
-  },
-
-  watch: {
-    search: debounce(function () {
-      this.searchArchive();
-    }, 1200),
   },
 
   mounted() {
@@ -161,33 +155,15 @@ export default {
     },
 
     async searchVideos() {
+			this.isLoading = true;
+
 			try {
-				const data = await this.$ServiceApi.getAllVideos(this.search);
+				const data = await this.$ServiceApi.searchVideos(this.search);
       	this.videos = data;
 			} catch (error) {
 				console.error(error);
 				this.isError = true;
-			}
-    },
-
-    async getVideoMetadata() {
-      try {
-				this.isLoading = true;
-        const res = await this.$ServiceApi.getMetadata(this.link);
-
-        if (res.status === 200 || res.status === 201) {
-          this.videoInfo.url = res.data.url;
-          this.videoInfo.title = res.data.title;
-          this.videoInfo.sizeMb = res.data.sizeMb;
-        }
-      } catch (error) {
-        console.error(error);
-        if (error.response.status === 400) {
-          this.popupError = true;
-          this.errorMessage = error.response.data;
-          this.link = '';
-        }
-      } finally {
+			} finally {
 				this.isLoading = false;
 			}
     },
@@ -208,11 +184,11 @@ export default {
       }
       this.closeModal()
 
-      const data = JSON.stringify({
+      const data = {
         url: this.videoInfo.url,
         title: this.videoInfo.title,
         sizeMb: this.videoInfo.sizeMb
-      });
+      };
 
       this.clearMetadata()
 
@@ -221,7 +197,7 @@ export default {
 
         if (res.status === 200 || res.status === 201) {
           this.id = res.data;
-          await this.addToList();
+          await this.addToVideoList();
         }
 
       } catch (error) {
@@ -233,13 +209,13 @@ export default {
       }
     },
 
-		async addToList() {
+		async addToVideoList() {
 			try {
-				let res = await this.$ServiceApi.checkStatus(this.id);
+				let res = await this.$ServiceApi.checkVideoStatus(this.id);
 				this.videos.unshift(res.data);
 
 				while (res.data.status !== 'DOWNLOADED') {
-					res = await this.$ServiceApi.checkStatus(this.id);
+					res = await this.$ServiceApi.checkVideoStatus(this.id);
 					await new Promise(resolve => setTimeout(resolve, 2500));
 					
 					if (res.data.status === "ERROR") {

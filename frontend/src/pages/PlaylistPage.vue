@@ -11,7 +11,8 @@
 
     <button
       type="button"
-      @click="saveModalHandler"
+      class="button"
+      @click="openModal($ServiceApi.getPlaylistMetadata(link))"
     >
       сохранить в яндекс облако
     </button>
@@ -34,57 +35,65 @@
     type="text"
     placeholder="Искать в архиве"
   >
-  <ul class="list-playlists">
+  <ul
+    v-if="playlists.length > 0"
+    class="list-playlists"
+  >
     <li
       v-for="playlist in playlists"
       :key="playlist.id"
       class="list-playlists__item"
     >
-      <div class="dropdown-line">
-        <span
-          @click="switchDropdown(playlist.id)"
-        >
+      <div class="list-playlists__item-heading">
+        <span>
           {{ playlist.title }}
         </span>
-        <button @click="downloadAllVideosFromPlaylist(playlist.id)">
-          Скачать весь плейлист
-        </button>
+	
+        <div class="buttons-group">
+          <button
+            class="button button_sm"
+            :class="{ 'button_active': playlist.showDropdown }"
+            @click="switchDropdown(playlist.id)"
+          >
+            {{ !playlist.showDropdown ? 'Смотреть список видео' : 'Скрыть список видео' }}  
+          </button>
+	
+          <button
+            class="button button_sm"
+            @click="downloadAllVideosFromPlaylist(playlist.id)"
+          >
+            Скачать
+          </button>
+        </div>
       </div>
-      <ul
-        v-if="playlist.showDropdown"
-        class="list-videos"
-      >
-        <li
-          v-for="video in playlist.videoArchives"
-          :key="video.id"
-          class="list-videos__item"
-        >
-          <span>{{ video.title }}</span>
-          <a
-            v-if="video.status === 'DOWNLOADED'"
-            :href="convertDownloadUrlToProxy(video.downloadUrl)"
-            :download="`${video.title}.mp4`"
-            target="_blank"
-          >
-            {{ $options.statuses[video.status] }}
-            {{ sizeInfo(video) }}
-          </a>
-          <p
-            v-else-if="video.status === 'ERROR'"
-            class="text-danger"
-          >
-            {{ $options.statuses[video.status] }}
-          </p>
-          <p
-            v-else
-            class="text-secondary"
-          >
-            {{ $options.statuses[video.status] }}
-          </p>
-        </li>
-      </ul>
+
+      <VideosList
+        v-show="playlist.showDropdown"
+        :videos="playlist.videoArchives"
+      />
     </li>
   </ul>
+
+  <div
+    v-else-if="isLoading"
+    class="mt-20 text-center"
+  >
+    <SpinnerLoader />
+  </div>
+
+  <p
+    v-else-if="isError"
+    class="mt-20 text-danger"
+  >
+    Не удалось загрузить плейлист :(
+  </p>
+
+  <p
+    v-else
+    class="mt-20"
+  >
+    Плейлист не найден
+  </p>
 
   <div
     v-if="showPopup"
@@ -115,6 +124,7 @@
       <button
         :disabled="popupError"
         type="submit"
+        class="button"
       >
         сохранить
       </button>
@@ -133,39 +143,31 @@
 </template>
 
 <script>
-import axios from 'axios';
-import debounce from 'lodash.debounce';
+import SpinnerLoader from '@/components/SpinnerLoader.vue';
+import VideosList from '@/components/VideosList.vue';
 import videosMixin from '@/mixins/videosMixin.js';
+import videoHrefMixin from '@/mixins/videoHrefMixin';
 
 export default {
-	mixins: [ videosMixin ],
+	components: {
+		SpinnerLoader,
+		VideosList,
+	},
+
+	mixins: [ 
+		videosMixin, 
+		videoHrefMixin,
+	],
 
   data() {
     return {
-      playlists: null,
+      playlists: [],
       playlistInfo: {
         url: '',
         title: '',
         videos: null
       },
     }
-  },
-
-  computed: {
-    baseApiUrl() {
-      // return import.meta.env.BASE_URL
-      return '/api'
-    },
-    baseDownloadUrl() {
-      // return import.meta.env.DOWNLOAD_BASE_URL
-      return '/download'
-    }
-  },
-
-  watch: {
-    search: debounce(function () {
-      this.searchArchive();
-    }, 1200),
   },
 
   mounted() {
@@ -182,17 +184,12 @@ export default {
       return this.playlists.findIndex(playlist => playlist.id === id)
     },
 
-    convertDownloadUrlToProxy(url) {
-      return this.baseDownloadUrl + '/' + url.split('/').slice(-1)[0];
-    },
-
     downloadAllVideosFromPlaylist(id) {
       const a = document.createElement("a");
       a.setAttribute('target', '_blank');
       this.playlists[this.getIndex(id)].videoArchives.forEach(el => {
         if (el.status === "DOWNLOADED") {
-          // window.open(this.convertDownloadUrlToProxy(el.downloadUrl), "download")
-          a.setAttribute('href', this.convertDownloadUrlToProxy(el.downloadUrl));
+          a.setAttribute('href', this.videoHref(el.downloadUrl));
           a.setAttribute('download', el.title);
           a.click();
         }
@@ -200,32 +197,27 @@ export default {
     },
 
     async getAllPlaylists() {
-      const res = await axios.get(`http://127.0.0.1:3001/api/playlist/archives?query=`);
-      this.playlists = res.data;
+			try {
+				const data = await this.$ServiceApi.getAllPlaylists();
+				this.playlists = data;
+			} catch (error) {
+				this.isError = true;
+			} finally {
+				this.isLoading = false;
+			}
     },
 
     async searchPlaylists() {
-      const res = await axios.get(`${this.baseApiUrl}/playlist/archives?query=${this.search}`)
-      this.playlists = res.data;
-    },
-
-    async getPlaylistMetadata() {
-      try {
-        const res = await this.$ServiceApi.getAllVideos(this.link);
-
-        if (res.status === 200 || res.status === 201) {
-          this.videoInfo.url = res.data.url;
-          this.videoInfo.title = res.data.title;
-          this.videoInfo.sizeMb = res.data.sizeMb;
-        }
-      } catch (error) {
-        console.error(error);
-        if (error.response.status === 400) {
-          this.popupError = true;
-          this.errorMessage = error.response.data;
-          this.link = '';
-        }
-      }
+			this.isLoading = true;
+			try {
+				const data = await this.$ServiceApi.searchPlaylists(this.search);
+      	this.playlists = data;
+			} catch (error) {
+				console.error(error);
+				this.isError = true;
+			} finally {
+				this.isLoading = false;
+			}
     },
 
     async searchArchive() {
@@ -240,12 +232,10 @@ export default {
 
     async savePlaylist() {
       if (!this.playlistInfo.title) {
-        return
+        return;
       }
-      this.closeModal()
 
-      // this.showPopup = false;
-      // this.link = '';
+      this.closeModal()
 
       const data = JSON.stringify({
         url: this.playlistInfo.url,
@@ -256,7 +246,7 @@ export default {
       this.clearMetadata()
 
       try {
-				const res = await this.$ServiceApi.saveVideo(data);
+				const res = await this.$ServiceApi.savePlaylist(data);
 
         if (res.status === 200 || res.status === 201) {
           this.id = res.data;
@@ -274,7 +264,7 @@ export default {
 
     async addPlaylistToList() {
       try {
-        let res = await axios.get(`${this.baseApiUrl}/playlist/archives/${this.id}`)
+        let res = await this.$ServiceApi.checkVideoListStatus(this.id);
         this.playlists.unshift(res.data);
         await this.listenForStatusChange(res.data.id);
       } catch (error) {
@@ -286,7 +276,7 @@ export default {
       try {
         let res, playlistDownloaded;
         do {
-          res = await axios.get(`${this.baseApiUrl}/playlist/archives/${this.id}`);
+          res = await this.$ServiceApi.checkVideoListStatus(this.id);
           const playlistIndex = this.getIndex(id)
           this.playlists[playlistIndex] = {...this.playlists[playlistIndex], ...res.data}
           playlistDownloaded = this.playlists[playlistIndex].videoArchives.reduce((acc, curr) => {
@@ -301,3 +291,15 @@ export default {
   },
 }
 </script>
+
+
+<style lang="scss" scoped>
+.buttons-group {
+	display: flex;
+	gap: 10px;
+
+	@media (max-width: 1023px) {
+		flex-direction: column;
+	}
+}
+</style>
