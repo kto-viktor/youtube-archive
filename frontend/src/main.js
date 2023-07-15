@@ -7,5 +7,5 @@ const app = createApp(App);
 
 app.config.globalProperties.$ServiceApi = new Service();
 app.config.globalProperties.$isDev = import.meta.env.MODE === 'develop' ? 'develop' : 'production';
-app.use(router)
+app.use(router);
 app.mount('#app');

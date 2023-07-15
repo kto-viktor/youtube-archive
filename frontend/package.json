@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vite --mode develop",
-		"devServer": "json-server --watch src/db.json --routes src/routes.json  --port 3001",
+		"devServer": "json-server --watch src/db.json  --routes src/routes.json  --port 3001",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{js,vue}\"",
