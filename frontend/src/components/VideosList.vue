@@ -36,7 +36,11 @@
 </template>
 
 <script>
+import videoHrefMixin from '@/mixins/videoHrefMixin';
+
 	export default {
+		mixins: [ videoHrefMixin ],
+
 		props: {
 			videos: {
 				type: Array,
@@ -51,10 +55,6 @@
   	},
 
 		methods: {
-			videoHref(video) {
-				return this.baseDownloadUrl + '/' + video.downloadUrl.split('//')[1].split('/').slice(1).join('/')
-			},
-
 			sizeInfo(video) {
 				return video.sizeMb > 0 ? ` (${video.sizeMb} мб)` : '(размер не известен)'
 			},
