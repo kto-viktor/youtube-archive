@@ -86,11 +86,11 @@ export default {
 
 	computed: {
 		baseApiUrl() {
-      return this.$isDev ? '/' : '/api'
+      return this.$isDev ? '/' : '/api';
     },
 
     baseDownloadUrl() {
-      return this.$isDev ? '' : '/download'
+      return this.$isDev ? '' : '/download';
     }
 	}
 }

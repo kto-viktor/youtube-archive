@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const isDev = import.meta.env.MODE === 'develop' ? 'develop' : 'production';
+const isDev = Boolean(import.meta.env.MODE === 'develop');
 const baseURL = isDev ? 'http://localhost:3001/api/' : '/api';
 
 const api = axios.create({
