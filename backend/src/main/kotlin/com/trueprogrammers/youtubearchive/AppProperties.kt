@@ -20,6 +20,7 @@ data class AppProperties(
         @NonNull val serviceEndpoint: String,
         @NonNull val signingRegion: String,
         @NonNull val accessKey: String,
-        @NonNull val secretKey: String
+        @NonNull val secretKey: String,
+        @NonNull val bucketName: String
     )
 }
