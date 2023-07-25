@@ -20,6 +20,12 @@ export default {
 			isError: false,
       search: '',
       id: null,
+			videoInfo: {
+        url: '',
+        title: '',
+        sizeMb: '',
+				videos: []
+      },
     }
   },
 
@@ -49,6 +55,7 @@ export default {
       this.videoInfo.url = '';
       this.videoInfo.title = '';
       this.videoInfo.sizeMb = '';
+      this.videoInfo.videos = [];
     },
 		
 		sizeInfo(size) {
@@ -64,6 +71,7 @@ export default {
           this.videoInfo.url = res.data.url;
           this.videoInfo.title = res.data.title;
           this.videoInfo.sizeMb = res.data.sizeMb;
+          this.videoInfo.videos = res.data.videos || [];
         }
       } catch (error) {
         console.error(error);
