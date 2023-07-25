@@ -36,10 +36,11 @@
 </template>
 
 <script>
+import videosMixin from '@/mixins/videosMixin';
 import videoHrefMixin from '@/mixins/videoHrefMixin';
 
 	export default {
-		mixins: [ videoHrefMixin ],
+		mixins: [videosMixin, videoHrefMixin ],
 
 		props: {
 			videos: {
@@ -62,6 +63,4 @@ import videoHrefMixin from '@/mixins/videoHrefMixin';
 	}
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>
