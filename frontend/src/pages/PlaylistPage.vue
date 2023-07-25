@@ -92,7 +92,7 @@
     v-else
     class="mt-20"
   >
-    Плейлист не найден
+    Плейлисты не найдены
   </p>
 
   <div
@@ -111,7 +111,10 @@
         readonly
         placeholder="Название плейлиста"
       >
-      <ul class="list-playlist-videos">
+      <ul
+        v-if="playlistInfo.videos.length > 0"
+        class="list-playlist-videos"
+      >
         <li
           v-for="video in playlistInfo.videos"
           :key="video.id"
@@ -162,11 +165,6 @@ export default {
   data() {
     return {
       playlists: [],
-      playlistInfo: {
-        url: '',
-        title: '',
-        videos: null
-      },
     }
   },
 
@@ -237,11 +235,12 @@ export default {
 
       this.closeModal()
 
-      const data = JSON.stringify({
-        url: this.playlistInfo.url,
-        title: this.playlistInfo.title,
-        videos: this.playlistInfo.videos
-      })
+      const data = {
+        url: this.videoInfo.url,
+        title: this.videoInfo.title,
+        sizeMb: this.videoInfo.sizeMb,
+        videos: this.videoInfo.videos
+      }
 
       this.clearMetadata()
 
