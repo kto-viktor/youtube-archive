@@ -8,12 +8,7 @@
 <script>
 export default {
 	props: {
-		width: {
-			type: String,
-			default: '48px',
-		},
-
-		height: {
+		size: {
 			type: String,
 			default: '48px',
 		},
@@ -26,7 +21,7 @@ export default {
 
 	computed: {
 		styles() {
-			return `width: ${this.width}; height: ${this.height}; border-width: ${this.borderWidth}`;
+			return `width: ${this.size}; height: ${this.size}; border-width: ${this.borderWidth}`;
 		}
 	}
 }
