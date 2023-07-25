@@ -129,11 +129,6 @@ export default {
     return {
       videos: [],
 			isVideoMode: true,
-      videoInfo: {
-        url: '',
-        title: '',
-        sizeMb: ''
-      },
     }
   },
 
@@ -182,13 +177,14 @@ export default {
       if (!this.videoInfo.title) {
         return
       }
+
       this.closeModal()
 
       const data = {
         url: this.videoInfo.url,
         title: this.videoInfo.title,
-        sizeMb: this.videoInfo.sizeMb
-      };
+        sizeMb: this.videoInfo.sizeMb,
+      }
 
       this.clearMetadata()
 
