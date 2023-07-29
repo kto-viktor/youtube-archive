@@ -106,17 +106,17 @@
       @submit.prevent="savePlaylist"
     >
       <input
-        v-model="playlistInfo.title"
+        v-model="videoInfo.title"
         v-focus
         readonly
         placeholder="Название плейлиста"
       >
       <ul
-        v-if="playlistInfo.videos.length > 0"
+        v-if="videoInfo.videos.length > 0"
         class="list-playlist-videos"
       >
         <li
-          v-for="video in playlistInfo.videos"
+          v-for="video in videoInfo.videos"
           :key="video.id"
           class="list-playlist-videos__item"
         >
@@ -229,7 +229,7 @@ export default {
     },
 
     async savePlaylist() {
-      if (!this.playlistInfo.title) {
+      if (!this.videoInfo.title) {
         return;
       }
 

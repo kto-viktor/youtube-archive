@@ -32,7 +32,9 @@ export default {
 	methods: {
 		openModal(fn) {
       if (this.link) {
-        this.getMetadata(fn);
+				if (fn) {
+					this.getMetadata(fn);
+				}
         this.pageError = false;
         this.showPopup = true;
       }
