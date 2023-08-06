@@ -42,7 +42,7 @@
   />
 
   <div
-    v-else-if="isLoading"
+    v-else-if="isListLoading"
     class="mt-20 text-center"
   >
     <SpinnerLoader />
@@ -73,7 +73,7 @@
       @submit.prevent="saveVideo"
     >	
       <div
-        v-if="isLoading"
+        v-if="isMetadataLoading"
         class="text-center spinner-wrapper"
       >
         <SpinnerLoader
@@ -139,27 +139,27 @@ export default {
   methods: {
     async getAllVideos() {
 			try {
-				const data = await this.$ServiceApi.getAllVideos();
-      	this.videos = data;
+        const data = await this.$ServiceApi.getAllVideos();
+        this.videos = data;
 			} catch (error) {
 				console.error(error);
 				this.isError = true;
 			} finally {
-				this.isLoading = false;
+				this.isListLoading = false;
 			}
     },
 
     async searchVideos() {
-			this.isLoading = true;
+			this.isListLoading = true;
 
 			try {
-				const data = await this.$ServiceApi.searchVideos(this.search);
-      	this.videos = data;
+        const data = await this.$ServiceApi.searchVideos(this.search);
+        this.videos = data;
 			} catch (error) {
 				console.error(error);
 				this.isError = true;
 			} finally {
-				this.isLoading = false;
+				this.isListLoading = false;
 			}
     },
 
@@ -243,7 +243,6 @@ export default {
 				})
 
 				console.error(error);
-				return;
 			}
 		},
   },

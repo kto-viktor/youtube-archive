@@ -75,7 +75,7 @@
   </ul>
 
   <div
-    v-else-if="isLoading"
+    v-else-if="isListLoading"
     class="mt-20 text-center"
   >
     <SpinnerLoader />
@@ -105,7 +105,19 @@
       class="popup__content__playlist"
       @submit.prevent="savePlaylist"
     >
+      <div
+        v-if="isMetadataLoading"
+        class="text-center spinner-wrapper"
+      >
+        <SpinnerLoader
+          width="30px"
+          height="30px"
+          border-width="4px"
+        />
+      </div>
+
       <input
+        v-else
         v-model="videoInfo.title"
         v-focus
         readonly
@@ -196,25 +208,25 @@ export default {
 
     async getAllPlaylists() {
 			try {
-				const data = await this.$ServiceApi.getAllPlaylists();
-				this.playlists = data;
+        const data = await this.$ServiceApi.getAllPlaylists();
+        this.playlists = data;
 			} catch (error) {
 				this.isError = true;
 			} finally {
-				this.isLoading = false;
+				this.isListLoading = false;
 			}
     },
 
     async searchPlaylists() {
-			this.isLoading = true;
+			this.isListLoading = true;
 			try {
-				const data = await this.$ServiceApi.searchPlaylists(this.search);
-      	this.playlists = data;
+        const data = await this.$ServiceApi.searchPlaylists(this.search);
+        this.playlists = data;
 			} catch (error) {
 				console.error(error);
 				this.isError = true;
 			} finally {
-				this.isLoading = false;
+				this.isListLoading = false;
 			}
     },
 
