@@ -211,42 +211,21 @@ export default {
         let index = this.videos.findIndex(video => video.youtubeUrl === res.data.youtubeUrl)
         if (index === -1) {
           this.videos.unshift(res.data);
+          index = 0
         } else {
           this.videos[index] = res.data;
         }
 
 				while (res.data.status !== 'DOWNLOADED') {
 					res = await this.$ServiceApi.checkVideoStatus(this.id);
+          this.videos[index] = res.data
 					await new Promise(resolve => setTimeout(resolve, 2500));
 					
 					if (res.data.status === "ERROR") {
 						throw new Error(res.data.status);
 					}
 				}
-
-				this.videos = this.videos.map((el) => {
-					if (el.id === res.data.id) {
-						return {
-							...el,
-							downloadUrl: res.data.downloadUrl,
-							status: "DOWNLOADED"
-						}
-					}
-
-					return el
-				})
 			} catch (error) {
-				this.videos = this.videos.map((el) => {
-					if (el.id === res.data.id) {
-						return {
-							...el,
-							status: "ERROR"
-						}
-					}
-
-					return el
-				})
-
 				console.error(error);
 			}
 		},
