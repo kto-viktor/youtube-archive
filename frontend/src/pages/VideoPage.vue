@@ -208,7 +208,12 @@ export default {
 		async addToVideoList() {
 			try {
 				let res = await this.$ServiceApi.checkVideoStatus(this.id);
-				this.videos.unshift(res.data);
+        let index = this.videos.findIndex(video => video.youtubeUrl === res.data.youtubeUrl)
+        if (index === -1) {
+          this.videos.unshift(res.data);
+        } else {
+          this.videos[index] = res.data;
+        }
 
 				while (res.data.status !== 'DOWNLOADED') {
 					res = await this.$ServiceApi.checkVideoStatus(this.id);

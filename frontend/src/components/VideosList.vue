@@ -16,7 +16,7 @@
           target="_blank"
         >
           {{ $options.statuses[video.status] }}
-          {{ sizeInfo(video) }}
+          {{ sizeInfo(video.sizeMb) }}
         </a>
         <p
           v-else-if="video.status === 'ERROR'"
@@ -56,8 +56,8 @@ import videoHrefMixin from '@/mixins/videoHrefMixin';
   	},
 
 		methods: {
-			sizeInfo(video) {
-				return video.sizeMb > 0 ? ` (${video.sizeMb} мб)` : '(размер не известен)'
+			sizeInfo(size) {
+        return size > 0 ? ` (${size} мб)` : '(размер не известен)'
 			},
 		}
 	}

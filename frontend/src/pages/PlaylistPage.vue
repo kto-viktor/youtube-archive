@@ -133,7 +133,7 @@
           class="list-playlist-videos__item"
         >
           <span>{{ video.title }}</span>
-          <p>Размер видео: {{ sizeInfo(video) }}</p>
+          <p>Размер видео: {{ sizeInfo(video.sizeMb) }}</p>
         </li>
       </ul>
       <button
@@ -277,6 +277,12 @@ export default {
       try {
         let res = await this.$ServiceApi.checkVideoListStatus(this.id);
         this.playlists.unshift(res.data);
+        let index = this.playlists.findIndex(playlist => playlist.url === res.data.url)
+        if (index === -1) {
+          this.playlists.unshift(res.data);
+        } else {
+          this.playlists[index] = res.data;
+        }
         await this.listenForStatusChange(res.data.id);
       } catch (error) {
         console.error(error);
