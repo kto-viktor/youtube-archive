@@ -1,5 +1,6 @@
 package com.trueprogrammers.youtubearchive.controller.handler
 
+import com.amazonaws.services.kms.model.NotFoundException
 import com.trueprogrammers.youtubearchive.models.exception.AlreadyExistsException
 import com.trueprogrammers.youtubearchive.models.exception.ExceededUploadS3LimitException
 import org.springframework.http.ResponseEntity
@@ -17,5 +18,10 @@ class ArchiveControllerExceptionHandler {
     @ExceptionHandler(value = [ExceededUploadS3LimitException::class])
     fun handleExceededUploadS3LimitException(ex: ExceededUploadS3LimitException, request: WebRequest) : ResponseEntity<String> {
         return ResponseEntity.status(409).body(ex.message)
+    }
+
+    @ExceptionHandler(value = [NotFoundException::class])
+    fun handleNotFoundException(ex: NotFoundException, request: WebRequest) : ResponseEntity<String> {
+        return ResponseEntity.status(404).body(ex.message)
     }
 }

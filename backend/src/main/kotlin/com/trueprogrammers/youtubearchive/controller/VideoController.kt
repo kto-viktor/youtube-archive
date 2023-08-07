@@ -1,6 +1,5 @@
 package com.trueprogrammers.youtubearchive.controller
 
-import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
 import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
 import com.trueprogrammers.youtubearchive.service.VideoArchiver
 import org.springframework.web.bind.annotation.*
@@ -10,14 +9,9 @@ import java.util.*
 class VideoController(
     private val videoArchiver: VideoArchiver
 ) {
-    @GetMapping("/video/metadata")
-    fun getVideoMetadata(@RequestParam url: String): VideoMetadata {
-        return videoArchiver.getVideoMetadata(url)
-    }
-
     @PostMapping("/video")
-    fun archiveVideo(@RequestBody metadata: VideoMetadata): UUID {
-        return videoArchiver.archiveVideo(metadata)
+    fun archiveVideo(@RequestBody youtubeUrl: String): String {
+        return videoArchiver.archiveVideo(youtubeUrl)
     }
 
     @GetMapping("/video/archives")
@@ -26,7 +20,7 @@ class VideoController(
     }
 
     @GetMapping("/video/archives/{id}")
-    fun getVideoArchiveById(@PathVariable id: UUID): VideoArchive {
+    fun getVideoArchiveById(@PathVariable id: String): VideoArchive {
         return videoArchiver.findVideoById(id)
     }
 }
