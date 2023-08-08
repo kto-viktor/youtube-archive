@@ -10,13 +10,15 @@ class PlaylistController(
     private val videoArchiver: VideoArchiver
 ) {
     @PostMapping("/playlist")
-    fun archivePlaylist(@RequestBody youtubeUrl: String): String {
-        return videoArchiver.archivePlaylist(youtubeUrl)
+    fun archivePlaylist(@RequestParam url: String): String {
+        return videoArchiver.archivePlaylist(url)
     }
 
     @GetMapping("/playlist/archives")
-    fun searchPlaylistArchives(@RequestParam(required = false) query: String?): List<PlaylistArchive> {
-        return videoArchiver.findPlaylistsByQuery(query)
+    fun searchPlaylistArchives(@RequestParam(value = "page", required = false, defaultValue = "0") page: Int,
+                               @RequestParam(value = "size", required = false, defaultValue = "10") size: Int,
+                               @RequestParam(required = false) query: String?): List<PlaylistArchive> {
+        return videoArchiver.findPlaylistsByQuery(page, size, query)
     }
 
     @GetMapping("/playlist/archives/{id}")

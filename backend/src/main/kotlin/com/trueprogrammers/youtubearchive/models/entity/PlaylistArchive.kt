@@ -1,5 +1,6 @@
 package com.trueprogrammers.youtubearchive.models.entity
 
+import java.time.LocalDateTime
 import javax.persistence.*
 
 
@@ -10,6 +11,8 @@ open class PlaylistArchive(
     @Column(name = "id", nullable = false)
     open var id: String?=null,
     open val title: String,
+    @Column(name = "created_date")
+    open val createdDate: LocalDateTime = LocalDateTime.now(),
     @ManyToMany
     @JoinTable(
         name = "video_in_playlist",

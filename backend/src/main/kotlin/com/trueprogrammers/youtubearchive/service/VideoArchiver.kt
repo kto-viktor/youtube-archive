@@ -17,6 +17,8 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.apache.commons.validator.routines.UrlValidator.ALLOW_ALL_SCHEMES
 import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -58,7 +60,11 @@ class VideoArchiver(
         if (!checkUploadLimitPerDay(playlistMetadata.videos.sumOf { metadata -> metadata.sizeMb })) {
             throw ExceededUploadS3LimitException(ErrorEnum.EXCEEDED_LIMIT_UPLOAD.getMessage())
         }
-        val playlistArchive = PlaylistArchive(playlistMetadata.youtubeId, playlistMetadata.title, ArrayList())
+        val playlistArchive = PlaylistArchive(
+            id = playlistMetadata.youtubeId,
+            title = playlistMetadata.title,
+            videoArchives = ArrayList()
+        )
 
         playlistMetadata.videos.forEach { video ->
             val videoArchive = videoArchiveRepository.findById(video.youtubeId)
@@ -110,28 +116,34 @@ class VideoArchiver(
         }
     }
 
-    fun findVideosByQuery(query: String?): List<VideoArchive> {
+    fun findVideosByQuery(page: Int, size: Int, query: String?): List<VideoArchive> {
         return if (query.isNullOrBlank()) {
-            videoArchiveRepository.findAll().sortedByDescending { it.createdDate }
+            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
+            videoArchiveRepository.findAll(sortedByDate).content
         } else {
-            videoArchiveRepository.findAll().filter { it.title.contains(query, true) }
+            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
+            videoArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate).content
         }
     }
 
     fun findVideoById(id: String): VideoArchive {
-        return videoArchiveRepository.findById(id).orElseThrow { NotFoundException(ErrorEnum.VIDEO_NOT_FOUND.getMessage()) }
+        return videoArchiveRepository.findById(id)
+            .orElseThrow { NotFoundException(ErrorEnum.VIDEO_NOT_FOUND.getMessage()) }
     }
 
-    fun findPlaylistsByQuery(query: String?): List<PlaylistArchive> {
+    fun findPlaylistsByQuery(page: Int, size: Int, query: String?): List<PlaylistArchive> {
         return if (query.isNullOrBlank()) {
-            playlistArchiveRepository.findAll().sortedByDescending { it.videoArchives[0].createdDate }
+            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
+            playlistArchiveRepository.findAll(sortedByDate).content
         } else {
-            playlistArchiveRepository.findAll().filter { it.title.contains(query, true) }
+            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
+            playlistArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate).content
         }
     }
 
     fun findPlaylistById(id: String): PlaylistArchive {
-        return playlistArchiveRepository.findById(id).orElseThrow { NotFoundException(ErrorEnum.PLAYLIST_NOT_FOUND.getMessage()) }
+        return playlistArchiveRepository.findById(id)
+            .orElseThrow { NotFoundException(ErrorEnum.PLAYLIST_NOT_FOUND.getMessage()) }
     }
 
     private fun checkUploadLimitPerDay(sizeMb: Double): Boolean {

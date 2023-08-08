@@ -3,7 +3,8 @@ create table public.playlist_archives
     id    varchar(50) not null
         primary key,
     title text,
-    url   text
+    url   text,
+    created_date timestamp
 );
 
 create table public.video_archives
