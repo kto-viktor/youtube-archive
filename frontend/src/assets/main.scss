@@ -228,3 +228,32 @@ input {
 .spinner-wrapper {
 	width: 100%;
 }
+
+.pages {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+}
+
+.page-item {
+	border: 3px solid #6610F2;
+	padding: 5px;
+	border-radius: 6px;
+	background-color: #ffffff;
+	color: #6610F2;
+	margin: 0 5px;
+	cursor: pointer;
+
+	&_active,
+	&:hover {
+		font-weight: bold;
+		background-color: #6610F2;
+		color: #ffffff;
+	}
+
+	&:disabled {
+		border-color: #7b7684;
+		background: #FFFFFF;
+		color: #7b7684;
+	}
+}

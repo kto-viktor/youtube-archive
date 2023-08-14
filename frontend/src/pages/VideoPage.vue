@@ -12,14 +12,14 @@
     <button
       type="button"
       class="button"
-      @click="openModal($ServiceApi.getVideoMetadata(link))"
+      @click="saveVideo(link)"
     >
       Сохранить в яндекс облако
     </button>
   </div>
 
   <div
-    v-show="pageError"
+    v-show="requestError"
     class="errorMessage"
   >
     <p
@@ -36,10 +36,17 @@
     placeholder="Искать в архиве"
   >
 
-  <VideosList
+  <div
     v-if="videos.length > 0"
-    :videos="videos"
-  />
+  >
+    <VideosList
+      :videos="videos"
+    />
+    <PaginationComponent
+      :total-pages="totalPages"
+      @page-change="changePage($event)"
+    />
+  </div>
 
   <div
     v-else-if="isListLoading"
@@ -49,7 +56,7 @@
   </div>
 
   <p
-    v-else-if="isError"
+    v-else-if="listGetError"
     class="mt-20 text-danger"
   >
     Не удалось загрузить видео :(
@@ -61,64 +68,17 @@
   >
     Видео не найдены
   </p>
-
-  <div
-    v-if="showPopup"
-    ref="modal"
-    class="popup"
-    @click="clickCloseModal"
-  >
-    <form
-      class="popup__content"
-      @submit.prevent="saveVideo"
-    >	
-      <div
-        v-if="isMetadataLoading"
-        class="text-center spinner-wrapper"
-      >
-        <SpinnerLoader
-          width="30px"
-          height="30px"
-          border-width="4px"
-        />
-      </div>
-
-      <input
-        v-else
-        v-model="videoInfo.title"
-        v-focus
-        readonly
-        placeholder="Название видео"
-      >
-      <p>Размер видео: {{ sizeInfo(videoInfo.sizeMb) }}</p>
-      <button
-        :disabled="popupError"
-        type="submit"
-        class="button"
-      >
-        сохранить
-      </button>
-      <div
-        v-show="popupError"
-        class="errorMessage"
-      >
-        <p
-          class="text-danger"
-        >
-          Ошибка: {{ errorMessage }}
-        </p>
-      </div>
-    </form>
-  </div>
 </template>
 
 <script>
 import SpinnerLoader from '@/components/SpinnerLoader.vue';
 import videosMixin from '@/mixins/videosMixin.js';
 import VideosList from '@/components/VideosList.vue'
+import PaginationComponent from "@/components/PaginationComponent.vue";
 
 export default {
 	components: {
+    PaginationComponent,
 		SpinnerLoader,
 		VideosList,
 	},
@@ -133,39 +93,40 @@ export default {
   },
 
   mounted() {
-		this.getAllVideos();
+		this.getAllItems();
   },
 
   methods: {
-    async getAllVideos() {
+    async getAllItems() {
 			try {
-        const data = await this.$ServiceApi.getAllVideos();
-        this.videos = data;
+        let res = await this.$ServiceApi.getAllVideos(this.currentPage - 1, this.pageSize)
+        this.videos = res.content;
+        this.totalPages = res.totalPages;
 			} catch (error) {
 				console.error(error);
-				this.isError = true;
+				this.listGetError = true;
 			} finally {
 				this.isListLoading = false;
 			}
     },
 
     async searchVideos() {
-			this.isListLoading = true;
-
 			try {
-        const data = await this.$ServiceApi.searchVideos(this.search);
-        this.videos = data;
+        let res = await this.$ServiceApi.searchVideos(this.search, this.currentPage - 1, this.pageSize);
+        this.videos = res.content;
+        this.totalPages = res.totalPages;
 			} catch (error) {
 				console.error(error);
-				this.isError = true;
+				this.listGetError = true;
 			} finally {
 				this.isListLoading = false;
 			}
     },
 
     async searchArchive() {
+      this.isListLoading = true;
       if (!this.search) {
-        await this.getAllVideos();
+        await this.getAllItems();
       }
 
       if (this.search) {
@@ -173,23 +134,9 @@ export default {
       }
     },
 
-    async saveVideo() {
-      if (!this.videoInfo.title) {
-        return
-      }
-
-      this.closeModal()
-
-      const data = {
-        url: this.videoInfo.url,
-        title: this.videoInfo.title,
-        sizeMb: this.videoInfo.sizeMb,
-      }
-
-      this.clearMetadata()
-
+    async saveVideo(url) {
       try {
-				const res = await this.$ServiceApi.saveVideo(data);
+				const res = await this.$ServiceApi.saveVideo(url);
 
         if (res.status === 200 || res.status === 201) {
           this.id = res.data;
@@ -199,7 +146,7 @@ export default {
       } catch (error) {
         console.error(error);
         if (error.response.status === 409 || error.response.status === 400) {
-          this.pageError = true;
+          this.requestError = true;
           this.errorMessage = error.response.data;
         }
       }
@@ -220,7 +167,7 @@ export default {
 					res = await this.$ServiceApi.checkVideoStatus(this.id);
           this.videos[index] = res.data
 					await new Promise(resolve => setTimeout(resolve, 2500));
-					
+
 					if (res.data.status === "ERROR") {
 						throw new Error(res.data.status);
 					}

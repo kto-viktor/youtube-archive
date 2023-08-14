@@ -12,14 +12,14 @@
     <button
       type="button"
       class="button"
-      @click="openModal($ServiceApi.getPlaylistMetadata(link))"
+      @click="savePlaylist(link)"
     >
       сохранить в яндекс облако
     </button>
   </div>
 
   <div
-    v-show="pageError"
+    v-show="requestError"
     class="errorMessage"
   >
     <p
@@ -82,10 +82,10 @@
   </div>
 
   <p
-    v-else-if="isError"
+    v-else-if="listGetError"
     class="mt-20 text-danger"
   >
-    Не удалось загрузить плейлист :(
+    Не удалось загрузить плейлисты :(
   </p>
 
   <p
@@ -95,65 +95,11 @@
     Плейлисты не найдены
   </p>
 
-  <div
-    v-if="showPopup"
-    ref="modal"
-    class="popup"
-    @click="clickCloseModal"
-  >
-    <form
-      class="popup__content__playlist"
-      @submit.prevent="savePlaylist"
-    >
-      <div
-        v-if="isMetadataLoading"
-        class="text-center spinner-wrapper"
-      >
-        <SpinnerLoader
-          width="30px"
-          height="30px"
-          border-width="4px"
-        />
-      </div>
-
-      <input
-        v-else
-        v-model="videoInfo.title"
-        v-focus
-        readonly
-        placeholder="Название плейлиста"
-      >
-      <ul
-        v-if="videoInfo.videos.length > 0"
-        class="list-playlist-videos"
-      >
-        <li
-          v-for="video in videoInfo.videos"
-          :key="video.id"
-          class="list-playlist-videos__item"
-        >
-          <span>{{ video.title }}</span>
-          <p>Размер видео: {{ sizeInfo(video.sizeMb) }}</p>
-        </li>
-      </ul>
-      <button
-        :disabled="popupError"
-        type="submit"
-        class="button"
-      >
-        сохранить
-      </button>
-      <div
-        v-show="popupError"
-        class="errorMessage"
-      >
-        <p
-          class="text-danger"
-        >
-          Ошибка: {{ errorMessage }}
-        </p>
-      </div>
-    </form>
+  <div>
+    <PaginationComponent
+      :total-pages="totalPages"
+      @page-change="changePage($event)"
+    />
   </div>
 </template>
 
@@ -162,9 +108,11 @@ import SpinnerLoader from '@/components/SpinnerLoader.vue';
 import VideosList from '@/components/VideosList.vue';
 import videosMixin from '@/mixins/videosMixin.js';
 import videoHrefMixin from '@/mixins/videoHrefMixin';
+import PaginationComponent from "@/components/PaginationComponent.vue";
 
 export default {
 	components: {
+    PaginationComponent,
 		SpinnerLoader,
 		VideosList,
 	},
@@ -181,7 +129,7 @@ export default {
   },
 
   mounted() {
-    this.getAllPlaylists();
+    this.getAllItems();
   },
 
   methods: {
@@ -206,33 +154,35 @@ export default {
       })
     },
 
-    async getAllPlaylists() {
+    async getAllItems() {
 			try {
-        const data = await this.$ServiceApi.getAllPlaylists();
-        this.playlists = data;
+        let res = await this.$ServiceApi.getAllPlaylists(this.currentPage - 1, this.pageSize);
+        this.videos = res.content;
+        this.totalPages = res.totalPages;
 			} catch (error) {
-				this.isError = true;
+				this.listGetError = true;
 			} finally {
 				this.isListLoading = false;
 			}
     },
 
     async searchPlaylists() {
-			this.isListLoading = true;
 			try {
-        const data = await this.$ServiceApi.searchPlaylists(this.search);
-        this.playlists = data;
+        let res = await this.$ServiceApi.searchPlaylists(this.search, this.currentPage - 1, this.pageSize);
+        this.videos = res.content;
+        this.totalPages = res.totalPages;
 			} catch (error) {
 				console.error(error);
-				this.isError = true;
+				this.listGetError = true;
 			} finally {
 				this.isListLoading = false;
 			}
     },
 
     async searchArchive() {
+      this.isListLoading = true;
       if (!this.search) {
-        await this.getAllPlaylists();
+        await this.getAllItems();
       }
 
       if (this.search) {
@@ -240,24 +190,9 @@ export default {
       }
     },
 
-    async savePlaylist() {
-      if (!this.videoInfo.title) {
-        return;
-      }
-
-      this.closeModal()
-
-      const data = {
-        url: this.videoInfo.url,
-        title: this.videoInfo.title,
-        sizeMb: this.videoInfo.sizeMb,
-        videos: this.videoInfo.videos
-      }
-
-      this.clearMetadata()
-
+    async savePlaylist(url) {
       try {
-				const res = await this.$ServiceApi.savePlaylist(data);
+				const res = await this.$ServiceApi.savePlaylist(url);
 
         if (res.status === 200 || res.status === 201) {
           this.id = res.data;
@@ -267,7 +202,7 @@ export default {
       } catch (error) {
         console.error(error);
         if (error.response.status === 409 || error.response.status === 400) {
-          this.pageError = true;
+          this.requestError = true;
           this.errorMessage = error.response.data;
         }
       }
@@ -277,6 +212,7 @@ export default {
       try {
         let res = await this.$ServiceApi.checkVideoListStatus(this.id);
         this.playlists.unshift(res.data);
+        if (this.playlists.length > this.pageSize) this.playlists.pop()
         let index = this.playlists.findIndex(playlist => playlist.url === res.data.url)
         if (index === -1) {
           this.playlists.unshift(res.data);

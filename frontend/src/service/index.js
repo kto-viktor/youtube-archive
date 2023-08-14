@@ -11,48 +11,36 @@ const api = axios.create({
 });
 
 export default class {
-	async getAllVideos() {
-		const res = await api.get('/video/archives?query=');
+	async getAllVideos(page, size) {
+		const res = await api.get(`/video/archives?page=${page}&size=${size}`);
 		return res.data;
 	}
 
-	async searchVideos(query) {
-		const res = await api.get(`/video/archives?query=${query}`)
+	async searchVideos(query, page, size) {
+		const res = await api.get(`/video/archives?page=${page}&size=${size}&query=${query}`)
 		return res.data;
 	}
 
-	async getVideoMetadata(link) {
-		return await api.get(`/video/metadata?url=${link}`);
-	}
-
-	async saveVideo(data) {
-		return await api.post(isDev ? '/video/archives/' : '/video', {
-			...data
-		});
+	async saveVideo(url) {
+		return await api.post(isDev ? '/video/archives/' : `/video?url=${url}`);
 	}
 
 	async checkVideoStatus(id) {
 		return await api.get(`/video/archives/${id}`);
 	}
 
-	async getAllPlaylists() {
-		const res = await api.get(isDev ? '/playlist/archives' : '/playlist/archives?query=');
+	async getAllPlaylists(page, size) {
+		const res = await api.get(isDev ? '/playlist/archives' : `/playlist/archives?page=${page}&size=${size}`);
 		return res.data;
 	}
 
-	async searchPlaylists(query) {
-		const res = await api.get(`/playlist/archives?query=${query}`)
+	async searchPlaylists(query, page, size) {
+		const res = await api.get(`/playlist/archives?page=${page}&size=${size}&query=${query}`)
 		return res.data;
 	}
 
-	async getPlaylistMetadata(query) {
-		return await api.get(`/playlist/metadata?url=${query}`)
-	}
-
-	async savePlaylist() {
-		return await api.post('/playlist', {
-			data
-		});
+	async savePlaylist(url) {
+		return await api.post(`/playlist?url=${url}`);
 	}
 
 	async checkVideoListStatus(id) {
