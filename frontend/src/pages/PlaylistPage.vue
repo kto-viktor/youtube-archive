@@ -157,7 +157,7 @@ export default {
     async getAllItems() {
 			try {
         let res = await this.$ServiceApi.getAllPlaylists(this.currentPage - 1, this.pageSize);
-        this.videos = res.content;
+        this.playlists = res.content;
         this.totalPages = res.totalPages;
 			} catch (error) {
 				this.listGetError = true;
@@ -169,7 +169,7 @@ export default {
     async searchPlaylists() {
 			try {
         let res = await this.$ServiceApi.searchPlaylists(this.search, this.currentPage - 1, this.pageSize);
-        this.videos = res.content;
+        this.playlists = res.content;
         this.totalPages = res.totalPages;
 			} catch (error) {
 				console.error(error);

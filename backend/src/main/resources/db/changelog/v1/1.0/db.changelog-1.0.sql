@@ -3,7 +3,6 @@ create table public.playlist_archives
     id    varchar(50) not null
         primary key,
     title text,
-    url   text,
     created_date timestamp
 );
 
@@ -16,8 +15,7 @@ create table public.video_archives
     progress     integer     not null,
     size_mb      double precision,
     status       varchar(255),
-    title        text,
-    youtube_url  text        not null
+    title        text
 );
 
 create table public.video_in_playlist
