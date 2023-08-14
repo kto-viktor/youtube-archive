@@ -4,7 +4,7 @@
       v-if="totalPages > 1"
       class="page-item"
       :disabled="currentPage === 1"
-      @click="changePage(-1)"
+      @click="changePage(currentPage - 1)"
     >
       Prev
     </button>
@@ -23,7 +23,7 @@
       v-if="totalPages > 1"
       class="page-item"
       :disabled="currentPage === totalPages"
-      @click="changePage(1)"
+      @click="changePage(currentPage + 1)"
     >
       Next
     </button>
@@ -81,13 +81,7 @@ export default {
   },
   methods: {
     changePage(page) {
-      if (page === -1) {
-        this.currentPage -= 1;
-      } else if (page === 1) {
-        this.currentPage += 1;
-      } else {
-        this.currentPage = page;
-      }
+      this.currentPage = page;
       this.$emit('page-change', this.currentPage)
     },
   },
