@@ -1,5 +1,6 @@
 package com.trueprogrammers.youtubearchive.controller
 
+import com.trueprogrammers.youtubearchive.models.dto.VideoPageResponseDto
 import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
 import com.trueprogrammers.youtubearchive.service.VideoArchiver
 import org.springframework.web.bind.annotation.*
@@ -19,12 +20,12 @@ class VideoController(
         @RequestParam(value = "page", required = false, defaultValue = "0") page: Int,
         @RequestParam(value = "size", required = false, defaultValue = "10") size: Int,
         @RequestParam(required = false) query: String?
-    ): List<VideoArchive> {
+    ): VideoPageResponseDto {
         return videoArchiver.findVideosByQuery(page, size, query)
     }
 
     @GetMapping("/video/archives/{id}")
     fun getVideoArchiveById(@PathVariable id: String): VideoArchive {
-        return videoArchiver.findVideoById(id)
+        return videoArchiver.getVideoById(id)
     }
 }

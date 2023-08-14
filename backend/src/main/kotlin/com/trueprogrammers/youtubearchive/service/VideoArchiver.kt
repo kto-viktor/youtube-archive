@@ -3,7 +3,9 @@ package com.trueprogrammers.youtubearchive.service
 import com.amazonaws.services.kms.model.NotFoundException
 import com.trueprogrammers.youtubearchive.AppProperties
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistMetadata
+import com.trueprogrammers.youtubearchive.models.dto.PlaylistPageResponseDto
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
+import com.trueprogrammers.youtubearchive.models.dto.VideoPageResponseDto
 import com.trueprogrammers.youtubearchive.models.entity.PlaylistArchive
 import com.trueprogrammers.youtubearchive.models.entity.Status
 import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
@@ -116,32 +118,34 @@ class VideoArchiver(
         }
     }
 
-    fun findVideosByQuery(page: Int, size: Int, query: String?): List<VideoArchive> {
-        return if (query.isNullOrBlank()) {
+    fun findVideosByQuery(page: Int, size: Int, query: String?): VideoPageResponseDto {
+        val videoPage = if (query.isNullOrBlank()) {
             val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
-            videoArchiveRepository.findAll(sortedByDate).content
+            videoArchiveRepository.findAll(sortedByDate)
         } else {
             val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
-            videoArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate).content
+            videoArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate)
         }
+        return VideoPageResponseDto(content = videoPage.content, totalPages = videoPage.totalPages)
     }
 
-    fun findVideoById(id: String): VideoArchive {
+    fun getVideoById(id: String): VideoArchive {
         return videoArchiveRepository.findById(id)
             .orElseThrow { NotFoundException(ErrorEnum.VIDEO_NOT_FOUND.getMessage()) }
     }
 
-    fun findPlaylistsByQuery(page: Int, size: Int, query: String?): List<PlaylistArchive> {
-        return if (query.isNullOrBlank()) {
+    fun findPlaylistsByQuery(page: Int, size: Int, query: String?): PlaylistPageResponseDto {
+        val playlistPage = if (query.isNullOrBlank()) {
             val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
-            playlistArchiveRepository.findAll(sortedByDate).content
+            playlistArchiveRepository.findAll(sortedByDate)
         } else {
             val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
-            playlistArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate).content
+            playlistArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate)
         }
+        return PlaylistPageResponseDto(content = playlistPage.content, totalPages = playlistPage.totalPages)
     }
 
-    fun findPlaylistById(id: String): PlaylistArchive {
+    fun getPlaylistById(id: String): PlaylistArchive {
         return playlistArchiveRepository.findById(id)
             .orElseThrow { NotFoundException(ErrorEnum.PLAYLIST_NOT_FOUND.getMessage()) }
     }
