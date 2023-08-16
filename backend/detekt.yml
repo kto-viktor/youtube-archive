@@ -1,0 +1,22 @@
+formatting:
+  NoWildcardImports:
+    active: false
+complexity:
+  LongParameterList:
+    ignoreDefaultParameters: true
+empty-blocks:
+  EmptyFunctionBlock:
+    active: false
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+style:
+  MagicNumber:
+    ignoreNumbers:
+      - '-1'
+      - '0'
+      - '1'
+      - '2'
+      - '100'
+      - '1024'
+    ignorePropertyDeclaration: true

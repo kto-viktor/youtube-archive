@@ -3,10 +3,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
 	id 'org.springframework.boot' version '2.7.11'
 	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
-	id 'org.jetbrains.kotlin.jvm' version '1.6.21'
-	id 'org.jetbrains.kotlin.plugin.spring' version '1.6.21'
-	id "org.jetbrains.kotlin.plugin.jpa" version "1.5.21"
+	id 'org.jetbrains.kotlin.jvm' version '1.7.21'
+	id 'org.jetbrains.kotlin.plugin.spring' version '1.7.21'
+	id "org.jetbrains.kotlin.plugin.jpa" version "1.7.21"
 	id "io.freefair.lombok" version "8.1.0"
+	id "io.gitlab.arturbosch.detekt" version "1.22.0"
 }
 
 group = 'com.true-programmers'
@@ -34,20 +35,25 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok:1.18.16'
 	testCompileOnly 'org.projectlombok:lombok:1.18.16'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.16'
+	detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0"
 }
 
-tasks.withType(KotlinCompile) {
+tasks.withType(KotlinCompile).configureEach {
 	kotlinOptions {
 		freeCompilerArgs = ['-Xjsr305=strict']
 		jvmTarget = '17'
 	}
 }
 
-task buildDocker {
+tasks.register('buildDocker') {
 	dependsOn bootJar
 	doLast {
 		exec {
 			commandLine "docker", "build", "-t", "ugpt/yt_archiver:backend", "."
 		}
 	}
+}
+
+detekt {
+	config = files("detekt.yml")
 }
