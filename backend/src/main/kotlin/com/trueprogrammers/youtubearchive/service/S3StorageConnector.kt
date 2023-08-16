@@ -5,6 +5,7 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.trueprogrammers.youtubearchive.AppProperties
@@ -16,9 +17,10 @@ import java.io.File
 
 @Service
 class S3StorageConnector(
-    final val props: AppProperties
+    val props: AppProperties
 ) {
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
+    private val multipartUploadThresholdMb = 5
     private final val credentials =
         AWSStaticCredentialsProvider(BasicAWSCredentials(props.s3.accessKey, props.s3.secretKey))
     private val s3Client = AmazonS3ClientBuilder.standard()
@@ -32,7 +34,7 @@ class S3StorageConnector(
         .build()
     private val transferManager: TransferManager = TransferManagerBuilder.standard()
         .withS3Client(s3Client)
-        .withMultipartUploadThreshold((5 * 1024 * 1025).toLong())
+        .withMultipartUploadThreshold((multipartUploadThresholdMb * 1024 * 1024).toLong())
         .build()
 
 
@@ -43,12 +45,9 @@ class S3StorageConnector(
             val s3Metadata = ObjectMetadata()
             s3Metadata.contentLength = file.length()
             s3Metadata.contentType = "video/mp4"
-            if (metadata.sizeMb < 100) {
-                s3Client.putObject(props.s3.bucketName, filename, file.inputStream(), s3Metadata)
-            } else {
-                val upload = transferManager.upload(props.s3.bucketName, filename, file.inputStream(), s3Metadata)
-                upload.waitForCompletion()
-            }
+            val request = PutObjectRequest(props.s3.bucketName, filename, file.inputStream(), s3Metadata)
+            val upload = transferManager.upload(request)
+            upload.waitForCompletion()
             val downloadUrl = s3Client.getUrl(props.s3.bucketName, filename).toExternalForm()
             log.info("successfully uploaded video $metadata")
             return downloadUrl

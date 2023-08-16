@@ -19,6 +19,4 @@ open class PlaylistArchive(
         joinColumns = [JoinColumn(name = "playlist_id", referencedColumnName = "id")],
         inverseJoinColumns = [JoinColumn(name = "video_id", referencedColumnName = "id")])
     open val videoArchives: MutableList<VideoArchive>
-) {
-
-}
+)

@@ -19,8 +19,8 @@ open class VideoArchive(
     open var progress: Int = 0,
     @Column(name = "created_date")
     open val createdDate: LocalDateTime = LocalDateTime.now()
-) {
-}
+)
+
 
 enum class Status {
     IN_PROGRESS,

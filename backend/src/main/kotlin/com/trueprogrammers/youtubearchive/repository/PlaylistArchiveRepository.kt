@@ -5,6 +5,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface PlaylistArchiveRepository: JpaRepository<PlaylistArchive, String> {
+interface PlaylistArchiveRepository : JpaRepository<PlaylistArchive, String> {
     fun findByTitleContainingIgnoreCase(title: String, page: Pageable): Page<PlaylistArchive>
 }
