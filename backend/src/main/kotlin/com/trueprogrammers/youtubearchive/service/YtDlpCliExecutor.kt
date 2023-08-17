@@ -9,10 +9,10 @@ import java.io.InputStreamReader
 class YtDlpCliExecutor {
     private final val utilityName = "yt-dlp"
     private final val bestVideoFormatFilter = "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b"
-    private final val infoPrintFormat = "%(webpage_url)s///%(title)s///%(filesize,filesize_approx)s"
+    private final val infoPrintFormat = "%(id)s///%(title)s///%(filesize,filesize_approx)s"
     fun processGettingVideoMetadata(url: String): BufferedReader {
         val commands = listOf(
-            "yt-dlp",
+            utilityName,
             "--compat-options",
             "no-youtube-unavailable-videos",
             "--no-warnings",
@@ -33,7 +33,7 @@ class YtDlpCliExecutor {
             "no-youtube-unavailable-videos",
             "--no-warnings",
             "--print",
-            "$infoPrintFormat///%(playlist_title)s",
+            "$infoPrintFormat///%(playlist_id)s///%(playlist_title)s",
             url,
             "-f",
             bestVideoFormatFilter
@@ -45,7 +45,7 @@ class YtDlpCliExecutor {
     fun processVideoDownloading(videoMetadata: VideoMetadata): Process {
         val commands = listOf(
             utilityName,
-            videoMetadata.url,
+            videoMetadata.youtubeId,
             "-f",
             bestVideoFormatFilter,
             "-o",

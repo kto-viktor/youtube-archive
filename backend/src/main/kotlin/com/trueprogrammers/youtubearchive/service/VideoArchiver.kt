@@ -3,45 +3,50 @@ package com.trueprogrammers.youtubearchive.service
 import com.amazonaws.services.kms.model.NotFoundException
 import com.trueprogrammers.youtubearchive.AppProperties
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistMetadata
-import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
-import com.trueprogrammers.youtubearchive.models.entity.Status
+import com.trueprogrammers.youtubearchive.models.dto.PlaylistPageResponseDto
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
+import com.trueprogrammers.youtubearchive.models.dto.VideoPageResponseDto
 import com.trueprogrammers.youtubearchive.models.entity.PlaylistArchive
+import com.trueprogrammers.youtubearchive.models.entity.Status
+import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
+import com.trueprogrammers.youtubearchive.models.ErrorMessageConstants
 import com.trueprogrammers.youtubearchive.models.exception.AlreadyExistsException
 import com.trueprogrammers.youtubearchive.models.exception.ExceededUploadS3LimitException
 import com.trueprogrammers.youtubearchive.repository.PlaylistArchiveRepository
 import com.trueprogrammers.youtubearchive.repository.VideoArchiveRepository
-import com.trueprogrammers.youtubearchive.service.mapper.VideoMetadataMapper
+import com.trueprogrammers.youtubearchive.service.mapper.MetadataParser
 import org.apache.commons.validator.routines.UrlValidator
+import org.apache.commons.validator.routines.UrlValidator.ALLOW_ALL_SCHEMES
 import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
 import java.util.concurrent.Executors
-import kotlin.collections.ArrayList
 
 @Service
 class VideoArchiver(
     private val videoArchiveRepository: VideoArchiveRepository,
     private val playlistArchiveRepository: PlaylistArchiveRepository,
-    private val mapper: VideoMetadataMapper,
+    private val parser: MetadataParser,
     private val s3StorageConnector: S3StorageConnector,
     private val ytDlpCliExecutor: YtDlpCliExecutor,
     private val props: AppProperties
 ) {
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
     private val executor = Executors.newFixedThreadPool(100)
-    private val urlValidator = UrlValidator()
+    private val urlValidator = UrlValidator(ALLOW_ALL_SCHEMES)
 
-    fun archiveVideo(metadata: VideoMetadata): UUID {
+    fun archiveVideo(youtubeUrl: String): String {
+        val metadata = getVideoMetadata(youtubeUrl)
         if (!checkUploadLimitPerDay(metadata.sizeMb)) {
-            throw ExceededUploadS3LimitException("Лимит загрузки превышен, попробуйте завтра")
+            throw ExceededUploadS3LimitException(ErrorMessageConstants.exceededLimitUpload)
         }
-        val archive = videoArchiveRepository.findByYoutubeUrl(metadata.url)
+        val archive = videoArchiveRepository.findById(metadata.youtubeId)
         archive.ifPresent {
             if (it.status === Status.ERROR) {
                 videoArchiveRepository.delete(it)
@@ -52,14 +57,19 @@ class VideoArchiver(
         return saveArchive(metadata).id!!
     }
 
-    fun archivePlaylist(playlistMetadata: PlaylistMetadata): UUID {
+    fun archivePlaylist(youtubeUrl: String): String {
+        val playlistMetadata = getPlaylistMetadata(youtubeUrl)
         if (!checkUploadLimitPerDay(playlistMetadata.videos.sumOf { metadata -> metadata.sizeMb })) {
-            throw ExceededUploadS3LimitException("Лимит загрузки превышен, попробуйте завтра")
+            throw ExceededUploadS3LimitException(ErrorMessageConstants.exceededLimitUpload)
         }
-        val playlistArchive = PlaylistArchive(playlistMetadata.url, playlistMetadata.title, ArrayList())
+        val playlistArchive = PlaylistArchive(
+            id = playlistMetadata.youtubeId,
+            title = playlistMetadata.title,
+            videoArchives = ArrayList()
+        )
 
         playlistMetadata.videos.forEach { video ->
-            val videoArchive = videoArchiveRepository.findByYoutubeUrl(video.url)
+            val videoArchive = videoArchiveRepository.findById(video.youtubeId)
             videoArchive.ifPresentOrElse({
                 if (it.status === Status.ERROR) {
                     videoArchiveRepository.delete(it)
@@ -75,53 +85,67 @@ class VideoArchiver(
     }
 
     fun getVideoMetadata(url: String): VideoMetadata {
-        require(urlValidator.isValid(url)) { "Неправильная ссылка - нужна ссылка на youtube-видео" }
-
-        val reader = ytDlpCliExecutor.processGettingVideoMetadata(url)
-        val line: String? = reader.readLine()
-        log.info("metadata line for video $line")
-        return mapper.metadataFromString(line!!)
+        require(urlValidator.isValid(url)) { ErrorMessageConstants.invalidVideoUrl }
+        try {
+            val reader = ytDlpCliExecutor.processGettingVideoMetadata(url)
+            val line: String? = reader.readLine()
+            log.info("metadata line for video $line")
+            return parser.metadataFromString(line)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException(ErrorMessageConstants.invalidVideoUrl)
+        }
     }
 
     fun getPlaylistMetadata(url: String): PlaylistMetadata {
-        require(urlValidator.isValid(url)) { "Неправильная ссылка - нужна ссылка на youtube-плейлист" }
+        require(urlValidator.isValid(url)) { ErrorMessageConstants.invalidPlaylistUrl }
+        try {
+            val reader = ytDlpCliExecutor.processGettingPlaylistMetadata(url)
+            var line: String? = reader.readLine()
 
-        val reader = ytDlpCliExecutor.processGettingPlaylistMetadata(url)
-        var line: String? = reader.readLine()
-        val playlistTitle = line!!.split("///")[3]
-        log.info("processing $playlistTitle playlist")
-        val playlistMetadata = PlaylistMetadata(url, playlistTitle, ArrayList())
+            val playlistTitle = parser.playlistTitleFromString(line)
+            val playlistYoutubeId = parser.playlistYoutubeIdFromString(line)
+            log.info("processing $playlistTitle playlist")
+            val playlistMetadata = PlaylistMetadata(playlistYoutubeId, playlistTitle, ArrayList())
 
-        do {
-            log.info("metadata line for video $line")
-            playlistMetadata.videos.add(mapper.metadataFromString(line!!))
-        } while (reader.readLine().also { line = it } != null)
+            do {
+                log.info("metadata line for video $line")
+                playlistMetadata.videos.add(parser.metadataFromString(line))
+            } while (reader.readLine().also { line = it } != null)
 
-        return playlistMetadata
-    }
-
-    fun findVideosByQuery(query: String?): List<VideoArchive> {
-        return if (query.isNullOrBlank()) {
-            videoArchiveRepository.findAll().sortedByDescending { it.createdDate }
-        } else {
-            videoArchiveRepository.findAll().filter { it.title.contains(query, true) }
+            return playlistMetadata
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException(ErrorMessageConstants.invalidPlaylistUrl)
         }
     }
 
-    fun findVideoById(id: UUID): VideoArchive {
-        return videoArchiveRepository.findById(id).orElseThrow { NotFoundException("not found") }
-    }
-
-    fun findPlaylistsByQuery(query: String?): List<PlaylistArchive> {
-        return if (query.isNullOrBlank()) {
-            playlistArchiveRepository.findAll().sortedByDescending { it.videoArchives[0].createdDate }
+    fun findVideosByQuery(page: Int, size: Int, query: String?): VideoPageResponseDto {
+        val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
+        val videoPage = if (query.isNullOrBlank()) {
+            videoArchiveRepository.findAll(sortedByDate)
         } else {
-            playlistArchiveRepository.findAll().filter { it.title.contains(query, true) }
+            videoArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate)
         }
+        return VideoPageResponseDto(content = videoPage.content, totalPages = videoPage.totalPages)
     }
 
-    fun findPlaylistById(id: UUID): PlaylistArchive {
-        return playlistArchiveRepository.findById(id).orElseThrow { NotFoundException("not found") }
+    fun getVideoById(id: String): VideoArchive {
+        return videoArchiveRepository.findById(id)
+            .orElseThrow { NotFoundException(ErrorMessageConstants.videoNotFound) }
+    }
+
+    fun findPlaylistsByQuery(page: Int, size: Int, query: String?): PlaylistPageResponseDto {
+        val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
+        val playlistPage = if (query.isNullOrBlank()) {
+            playlistArchiveRepository.findAll(sortedByDate)
+        } else {
+            playlistArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate)
+        }
+        return PlaylistPageResponseDto(content = playlistPage.content, totalPages = playlistPage.totalPages)
+    }
+
+    fun getPlaylistById(id: String): PlaylistArchive {
+        return playlistArchiveRepository.findById(id)
+            .orElseThrow { NotFoundException(ErrorMessageConstants.playlistNotFound) }
     }
 
     private fun checkUploadLimitPerDay(sizeMb: Double): Boolean {
@@ -140,7 +164,7 @@ class VideoArchiver(
     private fun saveArchive(metadata: VideoMetadata): VideoArchive {
         log.info("submitten for archive {}", metadata)
         val videoArchive = videoArchiveRepository.save(
-            VideoArchive(title = metadata.title, youtubeUrl = metadata.url, sizeMb = metadata.sizeMb)
+            VideoArchive(id = metadata.youtubeId, title = metadata.title, sizeMb = metadata.sizeMb)
         )
         startAsyncArchiving(videoArchive, metadata)
         return videoArchive
