@@ -119,11 +119,10 @@ class VideoArchiver(
     }
 
     fun findVideosByQuery(page: Int, size: Int, query: String?): VideoPageResponseDto {
+        val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
         val videoPage = if (query.isNullOrBlank()) {
-            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
             videoArchiveRepository.findAll(sortedByDate)
         } else {
-            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
             videoArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate)
         }
         return VideoPageResponseDto(content = videoPage.content, totalPages = videoPage.totalPages)
@@ -135,11 +134,10 @@ class VideoArchiver(
     }
 
     fun findPlaylistsByQuery(page: Int, size: Int, query: String?): PlaylistPageResponseDto {
+        val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
         val playlistPage = if (query.isNullOrBlank()) {
-            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
             playlistArchiveRepository.findAll(sortedByDate)
         } else {
-            val sortedByDate = PageRequest.of(page, size, Sort.by("createdDate").descending())
             playlistArchiveRepository.findByTitleContainingIgnoreCase(query, sortedByDate)
         }
         return PlaylistPageResponseDto(content = playlistPage.content, totalPages = playlistPage.totalPages)
