@@ -31,6 +31,7 @@ services:
       APP_S3_ACCESS_KEY: ""
       APP_S3_SECRET_KEY: ""
       APP_S3_BUCKET_NAME: "youtube-archive"
+      APP_UPLOAD_UPDATE_PROGRESS_PERIOD_MILLIS: 2000
       LOGGING_FILE_NAME: /var/log/back/backend.log
       LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN: /var/log/back/backend.%d{yyyy-MM-dd}.%i.log
       SPRING_PROFILES_ACTIVE: prod

@@ -33,7 +33,7 @@ class VideoArchiver(
     private val videoArchiveRepository: VideoArchiveRepository,
     private val playlistArchiveRepository: PlaylistArchiveRepository,
     private val parser: MetadataParser,
-    private val s3StorageConnector: S3StorageConnector,
+    private val videoUploader: VideoUploader,
     private val ytDlpCliExecutor: YtDlpCliExecutor,
     private val props: AppProperties
 ) {
@@ -55,7 +55,7 @@ class VideoArchiver(
                 throw AlreadyExistsException("Это видео уже сохранено, попробуйте поискать ${it.title} в списках видео")
             }
         }
-        return saveArchive(metadata).id!!
+        return saveArchive(metadata).id
     }
 
     fun archivePlaylist(youtubeUrl: String): String {
@@ -179,9 +179,18 @@ class VideoArchiver(
                 val process = ytDlpCliExecutor.processVideoDownloading(metadata)
                 reader = BufferedReader(InputStreamReader(process.inputStream))
                 var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    log.debug("[id ${videoArchive.id}]: $line")
+                val tracker = Runnable {
+                    while (reader.readLine().also { line = it } != null) {
+                        log.debug("[id ${videoArchive.id}]: $line")
+                        videoArchiveRepository.updateProgressById(
+                            videoArchive.id,
+                            ytDlpCliExecutor.getYtDlpDownloadProgressFromString(line!!)
+                        )
+                        Thread.sleep(props.upload.updateProgressPeriodMillis)
+                    }
                 }
+                val trackerThread = Thread(tracker)
+                trackerThread.start()
                 val exitCode = process.waitFor()
                 if (exitCode != 0) {
                     throw RuntimeException("Exit code non-zero: $exitCode")
@@ -189,8 +198,7 @@ class VideoArchiver(
                     log.info("successfully downloaded video $metadata")
                     videoArchive.progress = generalProgressOfDownloadedVideo
                     videoArchiveRepository.save(videoArchive)
-                    val downloadUrl = s3StorageConnector.uploadToS3(metadata)
-                    videoArchive.downloadUrl = downloadUrl
+                    videoArchive.downloadUrl = videoUploader.uploadVideo(videoArchive)
                     videoArchive.status = Status.DOWNLOADED
                     videoArchive.progress = 100
                     videoArchiveRepository.save(videoArchive)

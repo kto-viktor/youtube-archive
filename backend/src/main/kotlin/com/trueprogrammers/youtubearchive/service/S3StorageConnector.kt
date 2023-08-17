@@ -8,9 +8,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
+import com.amazonaws.services.s3.transfer.Upload
 import com.trueprogrammers.youtubearchive.AppProperties
-import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
 
@@ -18,7 +17,6 @@ import java.io.File
 class S3StorageConnector(
     private val props: AppProperties
 ) {
-    private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
     private val multipartUploadThresholdMb = 5
     private final val credentials =
         AWSStaticCredentialsProvider(BasicAWSCredentials(props.s3.accessKey, props.s3.secretKey))
@@ -36,21 +34,16 @@ class S3StorageConnector(
         .withMultipartUploadThreshold((multipartUploadThresholdMb * 1024 * 1024).toLong())
         .build()
 
-    fun uploadToS3(metadata: VideoMetadata): String? {
-        val filename = metadata.title + ".mp4"
-        val file = File(filename)
-        try {
-            val s3Metadata = ObjectMetadata()
-            s3Metadata.contentLength = file.length()
-            s3Metadata.contentType = "video/mp4"
-            val request = PutObjectRequest(props.s3.bucketName, filename, file.inputStream(), s3Metadata)
-            val upload = transferManager.upload(request)
-            upload.waitForCompletion()
-            val downloadUrl = s3Client.getUrl(props.s3.bucketName, filename).toExternalForm()
-            log.info("successfully uploaded video $metadata")
-            return downloadUrl
-        } finally {
-            file.delete()
-        }
+
+    fun uploadToS3(file: File): Upload {
+        val s3Metadata = ObjectMetadata()
+        s3Metadata.contentLength = file.length()
+        s3Metadata.contentType = "video/mp4"
+        val request = PutObjectRequest(props.s3.bucketName, file.name, file.inputStream(), s3Metadata)
+        return transferManager.upload(request)
+    }
+
+    fun getUploadedVideoUrl(filename: String): String {
+        return s3Client.getUrl(props.s3.bucketName, filename).toExternalForm()
     }
 }

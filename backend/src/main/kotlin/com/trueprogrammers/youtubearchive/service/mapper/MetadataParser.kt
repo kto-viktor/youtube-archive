@@ -1,14 +1,13 @@
 package com.trueprogrammers.youtubearchive.service.mapper
 
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
-import com.trueprogrammers.youtubearchive.service.VideoArchiver
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.math.floor
 
 @Service
 class MetadataParser {
-    private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
+    private val log = LoggerFactory.getLogger(MetadataParser::class.java)
     private val youtubeIdIndex = 0
     private val titleIndex = 1
     private val sizeIndex = 2
