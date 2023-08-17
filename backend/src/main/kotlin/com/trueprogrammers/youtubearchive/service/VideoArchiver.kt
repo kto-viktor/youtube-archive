@@ -1,7 +1,7 @@
 package com.trueprogrammers.youtubearchive.service
 
-import com.amazonaws.services.kms.model.NotFoundException
 import com.trueprogrammers.youtubearchive.AppProperties
+import com.trueprogrammers.youtubearchive.models.ErrorMessageConstants
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistMetadata
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistPageResponseDto
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
@@ -9,9 +9,9 @@ import com.trueprogrammers.youtubearchive.models.dto.VideoPageResponseDto
 import com.trueprogrammers.youtubearchive.models.entity.PlaylistArchive
 import com.trueprogrammers.youtubearchive.models.entity.Status
 import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
-import com.trueprogrammers.youtubearchive.models.ErrorMessageConstants
 import com.trueprogrammers.youtubearchive.models.exception.AlreadyExistsException
 import com.trueprogrammers.youtubearchive.models.exception.ExceededUploadS3LimitException
+import com.trueprogrammers.youtubearchive.models.exception.NotFoundException
 import com.trueprogrammers.youtubearchive.repository.PlaylistArchiveRepository
 import com.trueprogrammers.youtubearchive.repository.VideoArchiveRepository
 import com.trueprogrammers.youtubearchive.service.mapper.MetadataParser
@@ -40,6 +40,7 @@ class VideoArchiver(
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
     private val executor = Executors.newFixedThreadPool(100)
     private val urlValidator = UrlValidator(ALLOW_ALL_SCHEMES)
+    private val generalProgressOfDownloadedVideo = 50
 
     fun archiveVideo(youtubeUrl: String): String {
         val metadata = getVideoMetadata(youtubeUrl)
@@ -92,7 +93,7 @@ class VideoArchiver(
             log.info("metadata line for video $line")
             return parser.metadataFromString(line)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(ErrorMessageConstants.invalidVideoUrl)
+            throw IllegalArgumentException(ErrorMessageConstants.invalidVideoUrl, e)
         }
     }
 
@@ -114,7 +115,7 @@ class VideoArchiver(
 
             return playlistMetadata
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(ErrorMessageConstants.invalidPlaylistUrl)
+            throw IllegalArgumentException(ErrorMessageConstants.invalidPlaylistUrl, e)
         }
     }
 
@@ -154,6 +155,7 @@ class VideoArchiver(
         val sizeOfUploadedVideos: Double = try {
             videoArchiveRepository.getTotalSizeInDates(startDate, endDate)
         } catch (e: EmptyResultDataAccessException) {
+            log.warn("Today no downloads, $e exception produced")
             0.0
         }
         val gbSizeWithVideo: Double = (sizeOfUploadedVideos + sizeMb) / 1024
@@ -182,10 +184,10 @@ class VideoArchiver(
                 }
                 val exitCode = process.waitFor()
                 if (exitCode != 0) {
-                    throw Exception("Exit code non-zero: $exitCode")
+                    throw RuntimeException("Exit code non-zero: $exitCode")
                 } else {
                     log.info("successfully downloaded video $metadata")
-                    videoArchive.progress = 50
+                    videoArchive.progress = generalProgressOfDownloadedVideo
                     videoArchiveRepository.save(videoArchive)
                     val downloadUrl = s3StorageConnector.uploadToS3(metadata)
                     videoArchive.downloadUrl = downloadUrl
@@ -193,7 +195,7 @@ class VideoArchiver(
                     videoArchive.progress = 100
                     videoArchiveRepository.save(videoArchive)
                 }
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 log.error("Error when executing yt-dlp for video $metadata", e)
                 videoArchive.status = Status.ERROR
                 videoArchiveRepository.save(videoArchive)
