@@ -55,5 +55,5 @@ tasks.register('buildDocker') {
 }
 
 detekt {
-	config = files("detekt.yml")
+	config = files("default-detekt-config.yml", "detekt.yml")
 }

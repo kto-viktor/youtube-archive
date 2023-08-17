@@ -6,4 +6,3 @@ data class PlaylistPageResponseDto(
     val content: List<PlaylistArchive>,
     val totalPages: Int
 )
-

@@ -1,14 +1,15 @@
-formatting:
-  NoWildcardImports:
-    active: false
 complexity:
   LongParameterList:
     ignoreDefaultParameters: true
+  TooManyFunctions:
+    ignorePrivate: true
 empty-blocks:
   EmptyFunctionBlock:
     active: false
 exceptions:
   TooGenericExceptionCaught:
+    active: false
+  TooGenericExceptionThrown:
     active: false
 style:
   MagicNumber:

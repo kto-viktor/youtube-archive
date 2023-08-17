@@ -9,5 +9,5 @@ import org.springframework.boot.runApplication
 class YoutubeArchiveApplication
 
 fun main(args: Array<String>) {
-	runApplication<YoutubeArchiveApplication>(args = args)
+    runApplication<YoutubeArchiveApplication>(args = args)
 }

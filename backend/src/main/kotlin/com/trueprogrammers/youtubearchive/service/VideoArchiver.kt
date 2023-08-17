@@ -1,6 +1,7 @@
 package com.trueprogrammers.youtubearchive.service
 
 import com.trueprogrammers.youtubearchive.AppProperties
+import com.trueprogrammers.youtubearchive.models.ErrorMessageConstants
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistMetadata
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistPageResponseDto
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
@@ -8,7 +9,6 @@ import com.trueprogrammers.youtubearchive.models.dto.VideoPageResponseDto
 import com.trueprogrammers.youtubearchive.models.entity.PlaylistArchive
 import com.trueprogrammers.youtubearchive.models.entity.Status
 import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
-import com.trueprogrammers.youtubearchive.models.ErrorMessageConstants
 import com.trueprogrammers.youtubearchive.models.exception.AlreadyExistsException
 import com.trueprogrammers.youtubearchive.models.exception.ExceededUploadS3LimitException
 import com.trueprogrammers.youtubearchive.models.exception.NotFoundException
@@ -40,6 +40,7 @@ class VideoArchiver(
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
     private val executor = Executors.newFixedThreadPool(100)
     private val urlValidator = UrlValidator(ALLOW_ALL_SCHEMES)
+    private val generalProgressOfDownloadedVideo = 50
 
     fun archiveVideo(youtubeUrl: String): String {
         val metadata = getVideoMetadata(youtubeUrl)
@@ -186,7 +187,7 @@ class VideoArchiver(
                     throw RuntimeException("Exit code non-zero: $exitCode")
                 } else {
                     log.info("successfully downloaded video $metadata")
-                    videoArchive.progress = 50
+                    videoArchive.progress = generalProgressOfDownloadedVideo
                     videoArchiveRepository.save(videoArchive)
                     val downloadUrl = s3StorageConnector.uploadToS3(metadata)
                     videoArchive.downloadUrl = downloadUrl

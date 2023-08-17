@@ -14,10 +14,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
 
-
 @Service
 class S3StorageConnector(
-    val props: AppProperties
+    private val props: AppProperties
 ) {
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
     private val multipartUploadThresholdMb = 5
@@ -36,7 +35,6 @@ class S3StorageConnector(
         .withS3Client(s3Client)
         .withMultipartUploadThreshold((multipartUploadThresholdMb * 1024 * 1024).toLong())
         .build()
-
 
     fun uploadToS3(metadata: VideoMetadata): String? {
         val filename = metadata.title + ".mp4"

@@ -3,8 +3,11 @@ package com.trueprogrammers.youtubearchive.controller
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistPageResponseDto
 import com.trueprogrammers.youtubearchive.models.entity.PlaylistArchive
 import com.trueprogrammers.youtubearchive.service.VideoArchiver
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class PlaylistController(
