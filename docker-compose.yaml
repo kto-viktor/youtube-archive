@@ -37,6 +37,9 @@ services:
       SPRING_PROFILES_ACTIVE: prod
     depends_on:
       - archive_db
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       - ./logs/backend:/var/log/yt_archiver_backend
   archive_db:

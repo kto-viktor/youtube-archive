@@ -15,16 +15,15 @@ class VideoUploader(
 ) {
     private val log = LoggerFactory.getLogger(VideoUploader::class.java)
     private val generalProgressOfDownloadedVideo = 50
-    fun uploadVideo(videoArchive: VideoArchive): String {
-        val filename = videoArchive.title + ".mp4"
-        val file = File(filename)
+    fun uploadVideo(file: File, videoArchive: VideoArchive): String {
         val upload = s3StorageConnector.uploadToS3(file)
 
         val tracker = Runnable {
             val progress = upload.progress
             while (!upload.isDone) {
                 log.debug("progress of uploading video ${videoArchive.title} is ${progress.percentTransferred}")
-                val generalVideoProgress = generalProgressOfDownloadedVideo + progress.percentTransferred.toInt() / 2
+                val generalVideoProgress =
+                    generalProgressOfDownloadedVideo + progress.percentTransferred.toInt() / 2
                 videoRepository.updateProgressById(videoArchive.id, generalVideoProgress)
                 Thread.sleep(props.upload.updateProgressPeriodMillis)
             }

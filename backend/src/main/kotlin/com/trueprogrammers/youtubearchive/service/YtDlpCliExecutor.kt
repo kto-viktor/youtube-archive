@@ -4,17 +4,12 @@ import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.regex.Pattern
 
 @Service
 class YtDlpCliExecutor {
     private final val utilityName = "yt-dlp"
     private final val bestVideoFormatFilter = "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b"
     private final val infoPrintFormat = "%(id)s///%(title)s///%(filesize,filesize_approx)s"
-    private final val percentGroup = "percent"
-    private final val p = Pattern.compile(
-        "\\[download\\]\\s+(?<percent>\\d+\\.\\d)% .* ETA (?<minutes>\\d+):(?<seconds>\\d+)"
-    )
 
     fun processGettingVideoMetadata(url: String): BufferedReader {
         val commands = listOf(
@@ -64,14 +59,5 @@ class YtDlpCliExecutor {
         val processBuilder = ProcessBuilder(commands)
         processBuilder.redirectErrorStream(true)
         return processBuilder.start()
-    }
-
-    fun getYtDlpDownloadProgressFromString(line: String): Int {
-        val m = p.matcher(line)
-        return if (m.matches()) {
-            m.group(percentGroup).toInt()
-        } else {
-            0
-        }
     }
 }

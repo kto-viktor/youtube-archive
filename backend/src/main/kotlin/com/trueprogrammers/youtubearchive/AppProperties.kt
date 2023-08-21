@@ -24,6 +24,7 @@ data class AppProperties(
         @NonNull val secretKey: String,
         @NonNull val bucketName: String
     )
+
     @Getter
     @Setter
     @RequiredArgsConstructor

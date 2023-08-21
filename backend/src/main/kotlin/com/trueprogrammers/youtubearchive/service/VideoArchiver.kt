@@ -12,6 +12,8 @@ import com.trueprogrammers.youtubearchive.models.entity.VideoArchive
 import com.trueprogrammers.youtubearchive.models.exception.AlreadyExistsException
 import com.trueprogrammers.youtubearchive.models.exception.ExceededUploadS3LimitException
 import com.trueprogrammers.youtubearchive.models.exception.NotFoundException
+import com.trueprogrammers.youtubearchive.models.exception.VideoDownloadException
+import com.trueprogrammers.youtubearchive.models.exception.VideoUploadException
 import com.trueprogrammers.youtubearchive.repository.PlaylistArchiveRepository
 import com.trueprogrammers.youtubearchive.repository.VideoArchiveRepository
 import com.trueprogrammers.youtubearchive.service.mapper.MetadataParser
@@ -23,6 +25,8 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
+import java.io.File
+import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -180,34 +184,40 @@ class VideoArchiver(
                 reader = BufferedReader(InputStreamReader(process.inputStream))
                 var line: String?
                 val tracker = Runnable {
-                    while (reader.readLine().also { line = it } != null) {
-                        log.debug("[id ${videoArchive.id}]: $line")
-                        videoArchiveRepository.updateProgressById(
-                            videoArchive.id,
-                            ytDlpCliExecutor.getYtDlpDownloadProgressFromString(line!!)
-                        )
-                        Thread.sleep(props.upload.updateProgressPeriodMillis)
+                    try {
+                        while (reader.readLine().also { line = it } != null) {
+                            log.debug("[id ${videoArchive.id}]: $line")
+                            val currProgress = parser.getYtDlpDownloadProgressFromString(line!!) / 2
+                            log.debug("curr parsed progress = $currProgress, video archive id = ${videoArchive.id}")
+                            videoArchiveRepository.updateProgressById(videoArchive.id, currProgress)
+                            Thread.sleep(props.upload.updateProgressPeriodMillis)
+                        }
+                    } catch (e: IOException) {
+                        log.debug("yt-dlp download stream closed, $e")
                     }
                 }
                 val trackerThread = Thread(tracker)
                 trackerThread.start()
                 val exitCode = process.waitFor()
                 if (exitCode != 0) {
-                    throw RuntimeException("Exit code non-zero: $exitCode")
+                    throw VideoDownloadException("Exit code non-zero: $exitCode")
                 } else {
                     log.info("successfully downloaded video $metadata")
+                    val file = File(videoArchive.title + ".mp4")
                     videoArchive.progress = generalProgressOfDownloadedVideo
-                    videoArchiveRepository.save(videoArchive)
-                    videoArchive.downloadUrl = videoUploader.uploadVideo(videoArchive)
+                    videoArchive.sizeMb = parser.bytesToMb(file.length())
+                    videoArchive.downloadUrl = videoUploader.uploadVideo(file, videoArchive)
                     videoArchive.status = Status.DOWNLOADED
                     videoArchive.progress = 100
-                    videoArchiveRepository.save(videoArchive)
                 }
-            } catch (e: RuntimeException) {
-                log.error("Error when executing yt-dlp for video $metadata", e)
+            } catch (e: VideoDownloadException) {
+                log.error("Error while executing yt-dlp for video $metadata", e)
                 videoArchive.status = Status.ERROR
-                videoArchiveRepository.save(videoArchive)
+            } catch (e: VideoUploadException) {
+                log.error("Error while uploading video $metadata", e)
+                videoArchive.status = Status.ERROR
             } finally {
+                videoArchiveRepository.save(videoArchive)
                 reader?.close()
             }
         }

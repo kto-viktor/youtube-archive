@@ -15,7 +15,6 @@ interface VideoArchiveRepository : JpaRepository<VideoArchive, String> {
 
     fun findByTitleContainingIgnoreCase(title: String, page: Pageable): Page<VideoArchive>
 
-
     @Transactional
     @Modifying
     @Query("update VideoArchive v set v.progress = ?2 where v.id = ?1")
