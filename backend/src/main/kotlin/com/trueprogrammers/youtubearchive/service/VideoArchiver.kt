@@ -198,6 +198,9 @@ class VideoArchiver(
                 }
                 val trackerThread = Thread(tracker)
                 trackerThread.start()
+                while (reader.readLine().also { line = it } != null) {
+                    log.debug("[id ${videoArchive.id}]: $line")
+                }
                 val exitCode = process.waitFor()
                 if (exitCode != 0) {
                     throw VideoDownloadException("Exit code non-zero: $exitCode")
