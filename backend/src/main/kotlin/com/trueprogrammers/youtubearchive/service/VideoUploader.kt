@@ -6,12 +6,14 @@ import com.trueprogrammers.youtubearchive.repository.VideoArchiveRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+import java.util.concurrent.ExecutorService
 
 @Service
 class VideoUploader(
-    val s3StorageConnector: S3StorageConnector,
-    val videoRepository: VideoArchiveRepository,
-    val props: AppProperties
+    private val s3StorageConnector: S3StorageConnector,
+    private val videoRepository: VideoArchiveRepository,
+    private val props: AppProperties,
+    private val executor: ExecutorService
 ) {
     private val log = LoggerFactory.getLogger(VideoUploader::class.java)
     private val generalProgressOfDownloadedVideo = 50
@@ -28,8 +30,7 @@ class VideoUploader(
                 Thread.sleep(props.upload.updateProgressPeriodMillis)
             }
         }
-        val trackerThread = Thread(tracker)
-        trackerThread.start()
+        executor.execute(tracker)
 
         upload.waitForCompletion()
         log.info("successfully uploaded video $file.name")

@@ -30,7 +30,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
 
 @Service
 class VideoArchiver(
@@ -39,10 +39,10 @@ class VideoArchiver(
     private val parser: MetadataParser,
     private val videoUploader: VideoUploader,
     private val ytDlpCliExecutor: YtDlpCliExecutor,
-    private val props: AppProperties
+    private val props: AppProperties,
+    private val executor: ExecutorService
 ) {
     private val log = LoggerFactory.getLogger(VideoArchiver::class.java)
-    private val executor = Executors.newFixedThreadPool(100)
     private val urlValidator = UrlValidator(ALLOW_ALL_SCHEMES)
     private val generalProgressOfDownloadedVideo = 50
 
@@ -196,8 +196,7 @@ class VideoArchiver(
                         log.debug("yt-dlp download stream closed, $e")
                     }
                 }
-                val trackerThread = Thread(tracker)
-                trackerThread.start()
+                executor.execute(tracker)
                 while (reader.readLine().also { line = it } != null) {
                     log.debug("[id ${videoArchive.id}]: $line")
                 }
