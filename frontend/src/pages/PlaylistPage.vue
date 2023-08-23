@@ -96,7 +96,7 @@
   </p>
 
   <div>
-    <PaginationComponent
+    <Pagination
       :total-pages="totalPages"
       @page-change="changePage($event)"
     />
@@ -108,11 +108,11 @@ import SpinnerLoader from '@/components/SpinnerLoader.vue';
 import VideosList from '@/components/VideosList.vue';
 import videosMixin from '@/mixins/videosMixin.js';
 import videoHrefMixin from '@/mixins/videoHrefMixin';
-import PaginationComponent from "@/components/PaginationComponent.vue";
+import Pagination from "@/components/Pagination.vue";
 
 export default {
 	components: {
-    PaginationComponent,
+    Pagination,
 		SpinnerLoader,
 		VideosList,
 	},
@@ -156,7 +156,7 @@ export default {
 
     async getAllItems() {
 			try {
-        let res = await this.$ServiceApi.getAllPlaylists(this.currentPage - 1, this.pageSize);
+        let res = await this.$ServiceApi.getAllPlaylists(this.pageParam || this.currentPage - 1, this.pageSize);
         this.playlists = res.content;
         this.totalPages = res.totalPages;
 			} catch (error) {

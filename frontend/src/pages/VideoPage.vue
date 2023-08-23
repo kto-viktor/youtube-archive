@@ -36,17 +36,18 @@
     placeholder="Искать в архиве"
   >
 
-  <div
+  <template
     v-if="videos.length > 0"
   >
     <VideosList
       :videos="videos"
     />
-    <PaginationComponent
+    <Pagination
+      :current-page="pageParam"
       :total-pages="totalPages"
       @page-change="changePage($event)"
     />
-  </div>
+  </template>
 
   <div
     v-else-if="isListLoading"
@@ -74,11 +75,11 @@
 import SpinnerLoader from '@/components/SpinnerLoader.vue';
 import videosMixin from '@/mixins/videosMixin.js';
 import VideosList from '@/components/VideosList.vue'
-import PaginationComponent from "@/components/PaginationComponent.vue";
+import Pagination from "@/components/Pagination.vue";
 
 export default {
 	components: {
-    PaginationComponent,
+    Pagination,
 		SpinnerLoader,
 		VideosList,
 	},
@@ -99,7 +100,7 @@ export default {
   methods: {
     async getAllItems() {
 			try {
-        let res = await this.$ServiceApi.getAllVideos(this.currentPage - 1, this.pageSize)
+        const res = await this.$ServiceApi.getAllVideos(this.pageParam || this.currentPage - 1, this.pageSize);
         this.videos = res.content;
         this.totalPages = res.totalPages;
 			} catch (error) {
@@ -112,7 +113,7 @@ export default {
 
     async searchVideos() {
 			try {
-        let res = await this.$ServiceApi.searchVideos(this.search, this.currentPage - 1, this.pageSize);
+        const res = await this.$ServiceApi.searchVideos(this.search, this.currentPage - 1, this.pageSize);
         this.videos = res.content;
         this.totalPages = res.totalPages;
 			} catch (error) {
