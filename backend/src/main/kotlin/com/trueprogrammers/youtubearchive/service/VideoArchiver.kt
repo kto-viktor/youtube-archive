@@ -1,7 +1,7 @@
 package com.trueprogrammers.youtubearchive.service
 
 import com.trueprogrammers.youtubearchive.AppProperties
-import com.trueprogrammers.youtubearchive.models.ErrorMessageConstants
+import com.trueprogrammers.youtubearchive.models.ErrorCodeConstants
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistMetadata
 import com.trueprogrammers.youtubearchive.models.dto.PlaylistPageResponseDto
 import com.trueprogrammers.youtubearchive.models.dto.VideoMetadata
@@ -49,7 +49,7 @@ class VideoArchiver(
     fun archiveVideo(youtubeUrl: String): String {
         val metadata = getVideoMetadata(youtubeUrl)
         if (!checkUploadLimitPerDay(metadata.sizeMb)) {
-            throw ExceededUploadS3LimitException(ErrorMessageConstants.exceededLimitUpload)
+            throw ExceededUploadS3LimitException(ErrorCodeConstants.exceededLimitUpload)
         }
         val archive = videoArchiveRepository.findById(metadata.youtubeId)
         archive.ifPresent {
@@ -65,7 +65,7 @@ class VideoArchiver(
     fun archivePlaylist(youtubeUrl: String): String {
         val playlistMetadata = getPlaylistMetadata(youtubeUrl)
         if (!checkUploadLimitPerDay(playlistMetadata.videos.sumOf { metadata -> metadata.sizeMb })) {
-            throw ExceededUploadS3LimitException(ErrorMessageConstants.exceededLimitUpload)
+            throw ExceededUploadS3LimitException(ErrorCodeConstants.exceededLimitUpload)
         }
         val playlistArchive = PlaylistArchive(
             id = playlistMetadata.youtubeId,
@@ -90,19 +90,19 @@ class VideoArchiver(
     }
 
     fun getVideoMetadata(url: String): VideoMetadata {
-        require(urlValidator.isValid(url)) { ErrorMessageConstants.invalidVideoUrl }
+        require(urlValidator.isValid(url)) { ErrorCodeConstants.invalidVideoUrl }
         try {
             val reader = ytDlpCliExecutor.processGettingVideoMetadata(url)
             val line: String? = reader.readLine()
             log.info("metadata line for video $line")
             return parser.metadataFromString(line)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(ErrorMessageConstants.invalidVideoUrl, e)
+            throw IllegalArgumentException(ErrorCodeConstants.invalidVideoUrl, e)
         }
     }
 
     fun getPlaylistMetadata(url: String): PlaylistMetadata {
-        require(urlValidator.isValid(url)) { ErrorMessageConstants.invalidPlaylistUrl }
+        require(urlValidator.isValid(url)) { ErrorCodeConstants.invalidPlaylistUrl }
         try {
             val reader = ytDlpCliExecutor.processGettingPlaylistMetadata(url)
             var line: String? = reader.readLine()
@@ -119,7 +119,7 @@ class VideoArchiver(
 
             return playlistMetadata
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(ErrorMessageConstants.invalidPlaylistUrl, e)
+            throw IllegalArgumentException(ErrorCodeConstants.invalidPlaylistUrl, e)
         }
     }
 
@@ -135,7 +135,7 @@ class VideoArchiver(
 
     fun getVideoById(id: String): VideoArchive {
         return videoArchiveRepository.findById(id)
-            .orElseThrow { NotFoundException(ErrorMessageConstants.videoNotFound) }
+            .orElseThrow { NotFoundException(ErrorCodeConstants.videoNotFound) }
     }
 
     fun findPlaylistsByQuery(page: Int, size: Int, query: String?): PlaylistPageResponseDto {
@@ -150,7 +150,7 @@ class VideoArchiver(
 
     fun getPlaylistById(id: String): PlaylistArchive {
         return playlistArchiveRepository.findById(id)
-            .orElseThrow { NotFoundException(ErrorMessageConstants.playlistNotFound) }
+            .orElseThrow { NotFoundException(ErrorCodeConstants.playlistNotFound) }
     }
 
     private fun checkUploadLimitPerDay(sizeMb: Double): Boolean {
