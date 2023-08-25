@@ -7,6 +7,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 @EnableConfigurationProperties(AppProperties::class)
 class YoutubeArchiveApplication
-    fun main(args: Array<String>) {
-        runApplication<YoutubeArchiveApplication>(args = args)
-    }
+
+fun main(args: Array<String>) {
+    runApplication<YoutubeArchiveApplication>(args = args)
+}
