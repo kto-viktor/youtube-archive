@@ -28,7 +28,7 @@
           v-else
           class="text-secondary"
         >
-          {{ $options.statuses[video.status] }}
+          {{ `${$options.statuses[video.status]} (${video.progress}%)` }}
         </p>
       </td>
     </tr>

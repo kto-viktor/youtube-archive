@@ -139,30 +139,33 @@ export default {
 				const res = await this.$ServiceApi.saveVideo(url);
 
         if (res.status === 200 || res.status === 201) {
+          this.requestError = false;
           this.id = res.data;
+          this.link = ''
           await this.addToVideoList();
         }
-
       } catch (error) {
         console.error(error);
         if (error.response.status === 409 || error.response.status === 400) {
           this.requestError = true;
           this.errorMessage = error.response.data;
         }
+      } finally {
+        this.link = ''
       }
     },
 
 		async addToVideoList() {
 			try {
 				let res = await this.$ServiceApi.checkVideoStatus(this.id);
-        let index = this.videos.findIndex(video => video.youtubeUrl === res.data.youtubeUrl)
+        let index = this.videos.findIndex(video => video.id === res.data.id)
         if (index === -1) {
           this.videos.unshift(res.data);
           index = 0
         } else {
           this.videos[index] = res.data;
         }
-
+        if (this.videos.length > this.pageSize) this.videos.pop()
 				while (res.data.status !== 'DOWNLOADED') {
 					res = await this.$ServiceApi.checkVideoStatus(this.id);
           this.videos[index] = res.data

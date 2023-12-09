@@ -13,7 +13,7 @@ import javax.persistence.Table
 open class VideoArchive(
     @Id
     @Column(name = "id", nullable = false)
-    open var id: String? = null,
+    open var id: String,
     open val title: String,
     @Column(name = "download_url")
     open var downloadUrl: String? = null,
