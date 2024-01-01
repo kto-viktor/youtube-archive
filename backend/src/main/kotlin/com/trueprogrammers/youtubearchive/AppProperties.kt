@@ -10,7 +10,8 @@ import org.springframework.lang.NonNull
 @ConstructorBinding
 @ConfigurationProperties(prefix = "app")
 data class AppProperties(
-    @NonNull val s3: S3
+    @NonNull val s3: S3,
+    @NonNull val upload: Upload
 ) {
     @Getter
     @Setter
@@ -22,5 +23,12 @@ data class AppProperties(
         @NonNull val accessKey: String,
         @NonNull val secretKey: String,
         @NonNull val bucketName: String
+    )
+
+    @Getter
+    @Setter
+    @RequiredArgsConstructor
+    data class Upload(
+        @NonNull val updateProgressPeriodMillis: Long
     )
 }

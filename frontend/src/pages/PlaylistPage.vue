@@ -196,29 +196,31 @@ export default {
 
         if (res.status === 200 || res.status === 201) {
           this.id = res.data;
+          this.requestError = false;
+          this.link = ''
           await this.addPlaylistToList();
         }
-
       } catch (error) {
         console.error(error);
         if (error.response.status === 409 || error.response.status === 400) {
           this.requestError = true;
           this.errorMessage = error.response.data;
         }
+      } finally {
+        this.link = ''
       }
     },
 
     async addPlaylistToList() {
       try {
         let res = await this.$ServiceApi.checkVideoListStatus(this.id);
-        this.playlists.unshift(res.data);
-        if (this.playlists.length > this.pageSize) this.playlists.pop()
-        let index = this.playlists.findIndex(playlist => playlist.url === res.data.url)
+        let index = this.playlists.findIndex(playlist => playlist.id === res.data.id)
         if (index === -1) {
           this.playlists.unshift(res.data);
         } else {
           this.playlists[index] = res.data;
         }
+        if (this.playlists.length > this.pageSize) this.playlists.pop()
         await this.listenForStatusChange(res.data.id);
       } catch (error) {
         console.error(error);

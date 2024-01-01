@@ -10,6 +10,7 @@ class YtDlpCliExecutor {
     private final val utilityName = "yt-dlp"
     private final val bestVideoFormatFilter = "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b"
     private final val infoPrintFormat = "%(id)s///%(title)s///%(filesize,filesize_approx)s"
+
     fun processGettingVideoMetadata(url: String): BufferedReader {
         val commands = listOf(
             utilityName,
